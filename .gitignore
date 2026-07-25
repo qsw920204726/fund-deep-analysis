@@ -1,0 +1,13 @@
+# 运行缓存（中间产物，跑时自动重生）
+.cache/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db

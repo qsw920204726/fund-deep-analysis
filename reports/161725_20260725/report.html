@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>右侧作战卡 · 161725</title>
+<style>
+  :root { --bg:#0d1117; --surface:#161b22; --surface2:#1c2230; --border:#30363d;
+           --text:#e6edf3; --muted:#8b949e; --accent:#58a6ff; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+          line-height:1.5; padding:20px; max-width:980px; margin:0 auto; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px; margin-bottom:16px; }
+  h1 { font-size:20px; font-weight:600; }
+  .sub { color:var(--muted); font-size:13px; margin-top:4px; }
+  .head-row { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; }
+  .chip { display:inline-block; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; }
+  .hero { text-align:center; padding:24px 18px; }
+  .hero-action { font-size:26px; font-weight:700; margin:8px 0; }
+  .hero-pos { display:inline-block; padding:4px 16px; border-radius:8px; background:var(--surface2);
+               border:1px solid var(--border); font-size:15px; margin:6px 0 12px; }
+  .hero-rationale { color:var(--muted); font-size:13px; max-width:640px; margin:0 auto; }
+  .section-title { font-size:13px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px;
+                    margin-bottom:12px; font-weight:600; }
+  .chart { width:100%; height:auto; display:block; background:var(--surface2); border-radius:8px; }
+  .tooltip { position:absolute; pointer-events:none; background:var(--surface2); border:1px solid var(--border);
+              padding:6px 10px; border-radius:6px; font-size:12px; opacity:0; transition:opacity 0.1s;
+              transform:translateY(-50%); white-space:nowrap; }
+  .levels-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; }
+  .level-card { background:var(--surface2); border:1px solid; border-radius:10px; padding:12px; }
+  .level-head { display:flex; align-items:center; gap:6px; margin-bottom:6px; }
+  .level-icon { font-size:16px; }
+  .level-label { font-size:12px; color:var(--muted); }
+  .level-status { margin-left:auto; font-size:11px; font-weight:600; }
+  .level-price { font-size:20px; font-weight:700; }
+  .level-cut { font-size:11px; color:var(--muted); margin-top:2px; }
+  .level-trigger { font-size:10px; color:var(--muted); margin-top:6px; line-height:1.3; }
+  .kpi-row { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:10px; }
+  .kpi { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:12px; text-align:center; }
+  .kpi-label { font-size:11px; color:var(--muted); }
+  .kpi-value { font-size:20px; font-weight:700; margin:4px 0; }
+  .kpi-sub { font-size:10px; color:var(--muted); }
+  .sector { text-align:center; padding:14px; color:var(--muted); font-size:13px; }
+  .disclaimer { color:var(--muted); font-size:11px; text-align:center; padding:16px; line-height:1.6; }
+  .legend { display:flex; gap:16px; justify-content:center; margin-top:8px; font-size:11px; color:var(--muted); flex-wrap:wrap; }
+  .legend span { display:inline-flex; align-items:center; gap:4px; }
+  .swatch { width:14px; height:2px; display:inline-block; }
+  @media(max-width:560px){ .levels-grid,.kpi-row { grid-template-columns:repeat(2,1fr); } body{ padding:12px; } }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="head-row">
+    <div>
+      <h1>右侧作战卡 · 161725 · 招商中证白酒指数(LOF)A</h1>
+      <div class="sub">当前净值 <b style="color:var(--text)">0.5395</b> · 2026-07-24 · 2717 个交易日</div>
+    </div>
+    <div>
+      <span class="chip" style="background:#f8514922;color:#f85149">趋势：下降</span>
+      <span class="chip" style="background:var(--surface2);color:var(--muted)">空头排列</span>
+      <span class="chip" style="background:#d2992222;color:#d29922">⚠️ 深度回撤</span>
+    </div>
+  </div>
+</div>
+
+<div class="card hero">
+  <div class="section-title">操作建议</div>
+  <div class="hero-action" style="color:#f85149">观望 · 不进场</div>
+  <div class="hero-pos">建议仓位 0%</div>
+  <div class="hero-rationale">周线下降趋势 + 空头排列、板块下降🔴，右侧纪律第一条：不抄底。等站稳 MA20 + 更高低点 + 突破再谈建仓。</div>
+</div>
+
+<div class="card">
+  <div class="section-title">净值走势（周线，近 3 年）</div>
+  <div style="position:relative">
+<svg id="navchart" viewBox="0 0 820 300" class="chart" preserveAspectRatio="none">
+  <line x1="36" y1="264.0" x2="784" y2="264.0" stroke="#30363d" stroke-width="1" opacity="0.4"/><text x="4" y="267.0" fill="#8b949e" font-size="9">0.471</text><line x1="36" y1="207.0" x2="784" y2="207.0" stroke="#30363d" stroke-width="1" opacity="0.4"/><text x="4" y="210.0" fill="#8b949e" font-size="9">0.648</text><line x1="36" y1="150.0" x2="784" y2="150.0" stroke="#30363d" stroke-width="1" opacity="0.4"/><text x="4" y="153.0" fill="#8b949e" font-size="9">0.826</text><line x1="36" y1="93.0" x2="784" y2="93.0" stroke="#30363d" stroke-width="1" opacity="0.4"/><text x="4" y="96.0" fill="#8b949e" font-size="9">1.003</text><line x1="36" y1="36.0" x2="784" y2="36.0" stroke="#30363d" stroke-width="1" opacity="0.4"/><text x="4" y="39.0" fill="#8b949e" font-size="9">1.181</text>
+  <line x1="36" y1="191.7" x2="784" y2="191.7" stroke="#6e7681" stroke-width="1" stroke-dasharray="2,4" opacity="0.5"/><text x="784" y="187.7" fill="#6e7681" font-size="10" text-anchor="end" opacity="0.8">MA60 0.6961</text>
+  <line x1="36" y1="227.2" x2="784" y2="227.2" stroke="#8b949e" stroke-width="1" stroke-dasharray="2,4" opacity="0.5"/><text x="784" y="223.2" fill="#8b949e" font-size="10" text-anchor="end" opacity="0.8">MA20 0.5855</text>
+  <polyline points="36.0,52.7 40.8,52.7 45.7,52.3 50.5,51.9 55.3,51.9 60.1,52.3 65.0,52.8 69.8,53.3 74.6,54.2 79.4,54.9 84.3,55.4 89.1,56.1 93.9,56.7 98.7,57.7 103.6,58.5 108.4,58.9 113.2,59.6 118.0,60.2 122.9,60.6 127.7,61.2 132.5,61.9 137.3,63.1 142.2,64.0 147.0,64.3 151.8,64.4 156.6,65.1 161.5,65.8 166.3,66.7 171.1,67.5 175.9,68.4 180.8,69.6 185.6,71.0 190.4,72.3 195.3,73.3 200.1,74.6 204.9,76.2 209.7,77.6 214.6,79.4 219.4,81.2 224.2,82.8 229.0,84.3 233.9,85.8 238.7,87.0 243.5,88.2 248.3,89.7 253.2,91.5 258.0,93.2 262.8,94.8 267.6,96.5 272.5,98.3 277.3,100.0 282.1,101.3 286.9,103.0 291.8,104.7 296.6,106.1 301.4,107.4 306.2,109.4 311.1,111.0 315.9,112.7 320.7,114.6 325.5,116.7 330.4,117.8 335.2,118.9 340.0,120.5 344.9,121.9 349.7,123.2 354.5,124.5 359.3,125.6 364.2,126.8 369.0,128.2 373.8,129.5 378.6,130.6 383.5,131.4 388.3,132.2 393.1,133.3 397.9,134.7 402.8,136.2 407.6,137.5 412.4,138.9 417.2,140.2 422.1,141.3 426.9,141.9 431.7,142.5 436.5,143.3 441.4,143.6 446.2,143.6 451.0,143.8 455.8,143.9 460.7,143.9 465.5,144.2 470.3,144.7 475.1,145.4 480.0,146.0 484.8,146.9 489.6,147.8 494.5,148.8 499.3,149.9 504.1,150.8 508.9,151.8 513.8,153.1 518.6,154.4 523.4,155.8 528.2,157.1 533.1,158.1 537.9,158.9 542.7,159.8 547.5,160.4 552.4,160.7 557.2,160.8 562.0,160.5 566.8,160.5 571.7,160.5 576.5,160.3 581.3,160.2 586.1,160.2 591.0,160.1 595.8,159.8 600.6,159.7 605.4,159.3 610.3,158.7 615.1,158.1 619.9,158.5 624.7,159.3 629.6,159.9 634.4,160.4 639.2,161.0 644.1,161.6 648.9,162.7 653.7,163.6 658.5,164.3 663.4,165.2 668.2,165.9 673.0,166.7 677.8,167.3 682.7,168.1 687.5,168.7 692.3,169.2 697.1,169.8 702.0,170.5 706.8,171.2 711.6,171.8 716.4,172.7 721.3,173.5 726.1,174.5 730.9,175.6 735.7,177.2 740.6,178.6 745.4,179.9 750.2,181.4 755.0,182.9 759.9,184.5 764.7,186.1 769.5,187.5 774.3,189.0 779.2,190.5 784.0,191.7" fill="none" stroke="#6e7681" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.55"/>
+  <polyline points="36.0,57.1 40.8,60.2 45.7,60.9 50.5,61.4 55.3,63.1 60.1,65.5 65.0,67.3 69.8,67.5 74.6,67.5 79.4,68.0 84.3,68.5 89.1,68.8 93.9,69.7 98.7,71.2 103.6,71.6 108.4,70.8 113.2,72.0 118.0,72.6 122.9,72.4 127.7,72.7 132.5,74.4 137.3,76.9 142.2,80.7 147.0,83.9 151.8,87.3 156.6,90.6 161.5,94.2 166.3,98.3 171.1,103.0 175.9,106.5 180.8,109.3 185.6,111.5 190.4,113.4 195.3,113.5 200.1,114.5 204.9,116.2 209.7,117.2 214.6,119.0 219.4,120.9 224.2,121.5 229.0,121.5 233.9,120.4 238.7,119.2 243.5,119.2 248.3,118.7 253.2,118.3 258.0,118.2 262.8,118.7 267.6,118.9 272.5,120.4 277.3,122.3 282.1,123.7 286.9,125.9 291.8,129.3 296.6,132.2 301.4,135.2 306.2,139.0 311.1,141.5 315.9,144.7 320.7,149.4 325.5,154.1 330.4,156.1 335.2,156.9 340.0,158.4 344.9,159.9 349.7,160.7 354.5,161.1 359.3,159.7 364.2,158.5 369.0,157.7 373.8,156.8 378.6,156.5 383.5,155.0 388.3,153.8 393.1,153.1 397.9,152.8 402.8,152.5 407.6,152.0 412.4,151.2 417.2,149.6 422.1,148.2 426.9,149.3 431.7,151.5 436.5,152.2 441.4,152.3 446.2,151.9 451.0,152.0 455.8,153.3 460.7,154.1 465.5,154.4 470.3,155.0 475.1,155.9 480.0,157.1 484.8,157.6 489.6,158.1 494.5,158.3 499.3,158.3 504.1,158.8 508.9,159.7 513.8,160.2 518.6,160.9 523.4,162.0 528.2,162.7 533.1,163.6 537.9,164.6 542.7,166.7 547.5,168.0 552.4,169.1 557.2,169.6 562.0,169.5 566.8,169.6 571.7,169.1 576.5,168.8 581.3,169.2 586.1,169.3 591.0,169.3 595.8,168.7 600.6,168.3 605.4,167.1 610.3,166.4 615.1,165.1 619.9,164.2 624.7,163.7 629.6,163.8 634.4,164.3 639.2,164.5 644.1,164.8 648.9,165.8 653.7,167.1 658.5,169.0 663.4,171.0 668.2,172.8 673.0,174.1 677.8,175.2 682.7,176.8 687.5,178.6 692.3,180.5 697.1,182.5 702.0,184.8 706.8,186.8 711.6,189.4 716.4,191.9 721.3,194.1 726.1,196.0 730.9,197.9 735.7,200.3 740.6,202.9 745.4,204.8 750.2,207.5 755.0,210.1 759.9,212.9 764.7,216.2 769.5,219.7 774.3,222.7 779.2,225.2 784.0,227.2" fill="none" stroke="#8b949e" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.7"/>
+  <polyline id="navline" points="36.0,72.7 40.8,72.6 45.7,46.4 50.5,48.0 55.3,61.0 60.1,67.8 65.0,66.0 69.8,56.4 74.6,56.4 79.4,62.9 84.3,64.4 89.1,75.0 93.9,86.2 98.7,103.2 103.6,86.4 108.4,75.5 113.2,83.5 118.0,89.1 122.9,86.3 127.7,94.9 132.5,106.0 137.3,123.0 142.2,122.6 147.0,110.4 151.8,129.9 156.6,133.8 161.5,137.6 166.3,138.8 171.1,150.9 175.9,132.5 180.8,120.0 185.6,118.5 190.4,125.2 195.3,104.5 200.1,106.8 204.9,109.6 209.7,103.3 214.6,125.1 219.4,123.7 224.2,107.7 229.0,106.2 233.9,100.2 238.7,99.4 243.5,110.8 248.3,118.7 253.2,127.0 258.0,135.7 262.8,148.1 267.6,155.3 272.5,161.8 277.3,157.4 282.1,147.7 286.9,168.1 291.8,173.7 296.6,163.5 301.4,171.0 306.2,178.9 311.1,175.6 315.9,187.2 320.7,202.1 325.5,198.9 330.4,140.1 335.2,116.4 340.0,140.7 344.9,148.3 349.7,142.8 354.5,144.7 359.3,120.6 364.2,131.4 369.0,145.5 373.8,139.4 378.6,141.1 383.5,138.7 388.3,148.4 393.1,150.8 397.9,163.9 402.8,173.9 407.6,165.6 412.4,170.0 417.2,170.9 422.1,170.7 426.9,162.0 431.7,161.5 436.5,154.3 441.4,150.7 446.2,133.7 451.0,146.9 455.8,147.1 460.7,147.8 465.5,150.3 470.3,151.7 475.1,158.1 480.0,162.9 484.8,159.1 489.6,160.0 494.5,168.2 499.3,174.2 504.1,175.4 508.9,188.1 513.8,182.2 518.6,184.7 523.4,182.5 528.2,176.7 533.1,172.5 537.9,170.4 542.7,175.6 547.5,173.5 552.4,168.4 557.2,157.1 562.0,149.4 566.8,152.7 571.7,149.1 576.5,156.5 581.3,166.2 586.1,163.3 591.0,167.2 595.8,162.0 600.6,167.5 605.4,163.8 610.3,168.4 615.1,159.5 619.9,165.0 624.7,165.2 629.6,175.0 634.4,180.2 639.2,179.3 644.1,180.9 648.9,187.2 653.7,182.8 658.5,187.5 663.4,192.7 668.2,186.5 673.0,181.4 677.8,189.2 682.7,195.1 687.5,202.0 692.3,201.6 697.1,205.9 702.0,209.9 706.8,209.9 711.6,211.5 716.4,213.3 721.3,209.6 726.1,214.3 730.9,217.4 735.7,227.0 740.6,232.2 745.4,226.8 750.2,236.5 755.0,239.7 759.9,247.1 764.7,253.6 769.5,250.8 774.3,250.5 779.2,244.4 784.0,242.0" fill="none" stroke="#58a6ff" stroke-width="1.8" stroke-linejoin="round"/>
+  <circle id="navdot" cx="784.0" cy="242.0" r="3.5" fill="#58a6ff" stroke="#0d1117" stroke-width="1.5"/>
+  <line id="cross" x1="0" y1="36" x2="0" y2="264" stroke="#e6edf3" stroke-width="1" opacity="0" stroke-dasharray="3,3"/>
+  <circle id="hoverdot" r="3.5" fill="#e6edf3" stroke="#0d1117" stroke-width="1.5" opacity="0"/>
+</svg>
+<div id="tooltip" class="tooltip"></div>
+<script>
+(function(){
+  const svg=document.getElementById('navchart');
+  const tip=document.getElementById('tooltip');
+  const cross=document.getElementById('cross');
+  const hdot=document.getElementById('hoverdot');
+  const line=document.getElementById('navline');
+  const pts=line.getAttribute('points').trim().split(/\s+/).map(p=>p.split(',').map(Number));
+  const dates=['2023-07-14', '2023-07-21', '2023-07-28', '2023-08-04', '2023-08-11', '2023-08-18', '2023-08-25', '2023-09-01', '2023-09-08', '2023-09-15', '2023-09-22', '2023-09-28', '2023-10-13', '2023-10-20', '2023-10-27', '2023-11-03', '2023-11-10', '2023-11-17', '2023-11-24', '2023-12-01', '2023-12-08', '2023-12-15', '2023-12-22', '2023-12-31', '2024-01-05', '2024-01-12', '2024-01-19', '2024-01-26', '2024-02-02', '2024-02-08', '2024-02-23', '2024-03-01', '2024-03-08', '2024-03-15', '2024-03-22', '2024-03-29', '2024-04-03', '2024-04-12', '2024-04-19', '2024-04-26', '2024-04-30', '2024-05-10', '2024-05-17', '2024-05-24', '2024-05-31', '2024-06-07', '2024-06-14', '2024-06-21', '2024-06-30', '2024-07-05', '2024-07-12', '2024-07-19', '2024-07-26', '2024-08-02', '2024-08-09', '2024-08-16', '2024-08-23', '2024-08-30', '2024-09-06', '2024-09-13', '2024-09-20', '2024-09-27', '2024-09-30', '2024-10-11', '2024-10-18', '2024-10-25', '2024-11-01', '2024-11-08', '2024-11-15', '2024-11-22', '2024-11-29', '2024-12-06', '2024-12-13', '2024-12-20', '2024-12-27', '2025-01-03', '2025-01-10', '2025-01-17', '2025-01-24', '2025-01-27', '2025-02-07', '2025-02-14', '2025-02-21', '2025-02-28', '2025-03-07', '2025-03-14', '2025-03-21', '2025-03-28', '2025-04-03', '2025-04-11', '2025-04-18', '2025-04-25', '2025-04-30', '2025-05-09', '2025-05-16', '2025-05-23', '2025-05-30', '2025-06-06', '2025-06-13', '2025-06-20', '2025-06-27', '2025-07-04', '2025-07-11', '2025-07-18', '2025-07-25', '2025-08-01', '2025-08-08', '2025-08-15', '2025-08-22', '2025-08-29', '2025-09-05', '2025-09-12', '2025-09-19', '2025-09-26', '2025-09-30', '2025-10-10', '2025-10-17', '2025-10-24', '2025-10-31', '2025-11-07', '2025-11-14', '2025-11-21', '2025-11-28', '2025-12-05', '2025-12-12', '2025-12-19', '2025-12-26', '2025-12-31', '2026-01-09', '2026-01-16', '2026-01-23', '2026-01-30', '2026-02-06', '2026-02-13', '2026-02-27', '2026-03-06', '2026-03-13', '2026-03-20', '2026-03-27', '2026-04-03', '2026-04-10', '2026-04-17', '2026-04-24', '2026-04-30', '2026-05-08', '2026-05-15', '2026-05-22', '2026-05-29', '2026-06-05', '2026-06-12', '2026-06-18', '2026-06-26', '2026-07-03', '2026-07-10', '2026-07-17', '2026-07-24'];
+  const vals=[1.0664,1.0669,1.1485,1.1434,1.1029,1.0817,1.0875,1.1171,1.1174,1.0970,1.0924,1.0592,1.0244,0.9714,1.0238,1.0577,1.0330,1.0155,1.0241,0.9973,0.9629,0.9100,0.9113,0.9490,0.8885,0.8763,0.8644,0.8607,0.8231,0.8803,0.9191,0.9239,0.9032,0.9674,0.9604,0.9515,0.9711,0.9035,0.9078,0.9576,0.9621,0.9809,0.9833,0.9479,0.9233,0.8976,0.8704,0.8317,0.8094,0.7891,0.8027,0.8331,0.7695,0.7522,0.7837,0.7605,0.7358,0.7462,0.7099,0.6635,0.6737,0.8566,0.9306,0.8549,0.8310,0.8483,0.8425,0.9174,0.8839,0.8400,0.8588,0.8536,0.8610,0.8307,0.8234,0.7826,0.7513,0.7773,0.7635,0.7609,0.7614,0.7886,0.7901,0.8124,0.8237,0.8765,0.8355,0.8349,0.8326,0.8250,0.8206,0.8006,0.7856,0.7975,0.7948,0.7693,0.7505,0.7469,0.7073,0.7257,0.7177,0.7246,0.7427,0.7558,0.7622,0.7462,0.7528,0.7685,0.8038,0.8277,0.8175,0.8286,0.8056,0.7755,0.7844,0.7723,0.7885,0.7715,0.7829,0.7686,0.7962,0.7791,0.7786,0.7479,0.7319,0.7345,0.7297,0.7099,0.7237,0.7092,0.6928,0.7121,0.7282,0.7037,0.6854,0.6640,0.6653,0.6519,0.6394,0.6393,0.6344,0.6288,0.6402,0.6256,0.6159,0.5861,0.5700,0.5866,0.5564,0.5467,0.5234,0.5032,0.5119,0.5131,0.5320,0.5395];
+  function pt(e){
+    const r=svg.getBoundingClientRect();
+    const x=(e.clientX-r.left)/r.width*820;
+    let best=0,bd=1e9;
+    for(let i=0;i<pts.length;i++){if(Math.abs(pts[i][0]-x)<bd){bd=Math.abs(pts[i][0]-x);best=i;}}
+    const px=pts[best][0],py=pts[best][1];
+    hdot.setAttribute('cx',px);hdot.setAttribute('cy',py);hdot.setAttribute('opacity',1);
+    cross.setAttribute('x1',px);cross.setAttribute('x2',px);cross.setAttribute('opacity',0.5);
+    tip.style.opacity=1;
+    tip.innerHTML=dates[best]+'<br><b>'+vals[best].toFixed(4)+'</b>';
+    const left=Math.min(px/820*100+1, 78);
+    tip.style.left=left+'%';
+  }
+  svg.addEventListener('mousemove',pt);
+  svg.addEventListener('mouseleave',()=>{hdot.setAttribute('opacity',0);cross.setAttribute('opacity',0);tip.style.opacity=0;});
+})();
+</script></div>
+  <div class="legend">
+    <span><span class="swatch" style="background:#58a6ff"></span>单位净值</span>
+    <span><span class="swatch" style="background:#8b949e;border-top:1px dashed #8b949e"></span>MA20周</span>
+    <span><span class="swatch" style="background:#6e7681"></span>MA60周</span>
+  </div>
+</div>
+
+<div class="card">
+  <div class="section-title">关键净值位（建仓 / 加仓 / 止盈 / 止损）</div>
+  <div class="levels-grid">
+    <div class="level-card" style="border-color:#f8514933">
+      <div class="level-head"><span class="level-icon">🏗️</span>
+        <span class="level-label">建仓</span>
+        <span class="level-status" style="color:#f85149">不建议</span></div>
+      <div class="level-price" style="color:#f85149">—</div>
+      <div class="level-cut">底仓 30%</div>
+      <div class="level-trigger">周线下降 + 空头排列，净值 0.5395 跌破 MA20(0.5855)/MA60(0.6961)，右侧未确认；板块下降🔴共振走弱。纪律不抄底，等站稳 MA20 + 更高低点 + 突破。</div>
+    </div>
+    <div class="level-card" style="border-color:#f8514933">
+      <div class="level-head"><span class="level-icon">➕</span>
+        <span class="level-label">加仓</span>
+        <span class="level-status" style="color:#f85149">不建议</span></div>
+      <div class="level-price" style="color:#f85149">—</div>
+      <div class="level-cut">金字塔 15→5%</div>
+      <div class="level-trigger">趋势为「下降」、无上升结构，加仓 = 接飞刀 / 摊低成本，违反右侧纪律。</div>
+    </div>
+    <div class="level-card" style="border-color:#8b949e33">
+      <div class="level-head"><span class="level-icon">①</span>
+        <span class="level-label">止盈</span>
+        <span class="level-status" style="color:#8b949e">若持有·触发即撤</span></div>
+      <div class="level-price" style="color:#8b949e">0.5233</div>
+      <div class="level-cut">减 30%</div>
+      <div class="level-trigger">跌破近端支撑（约 0.5233）说明短线走弱，先减 30% 锁利润。</div>
+    </div>
+    <div class="level-card" style="border-color:#8b949e33">
+      <div class="level-head"><span class="level-icon">②</span>
+        <span class="level-label">止盈</span>
+        <span class="level-status" style="color:#8b949e">若持有·触发即撤</span></div>
+      <div class="level-price" style="color:#8b949e">0.5855</div>
+      <div class="level-cut">减 40%</div>
+      <div class="level-trigger">跌破 MA20(0.5855) + 死叉，中期趋势走弱，再减 40%。</div>
+    </div>
+    <div class="level-card" style="border-color:#8b949e33">
+      <div class="level-head"><span class="level-icon">🛑</span>
+        <span class="level-label">移动止盈</span>
+        <span class="level-status" style="color:#8b949e">若持有·触发即撤</span></div>
+      <div class="level-price" style="color:#8b949e">0.7457</div>
+      <div class="level-cut">清仓</div>
+      <div class="level-trigger">从阶段高点 0.8286 回撤 10%（至 0.7457）触发，平衡型保护利润、让利润奔跑。</div>
+    </div>
+    <div class="level-card" style="border-color:#8b949e33">
+      <div class="level-head"><span class="level-icon">✕</span>
+        <span class="level-label">止损</span>
+        <span class="level-status" style="color:#8b949e">若持有·触发即撤</span></div>
+      <div class="level-price" style="color:#8b949e">0.5032</div>
+      <div class="level-cut">清仓</div>
+      <div class="level-trigger">跌破前低 0.5032 → 更低低点、下跌结构延续，右侧纪律坚决清仓，不抱侥幸。</div>
+    </div></div>
+</div>
+
+<div class="card">
+  <div class="section-title">风险收益指标</div>
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="kpi-label">趋势</div>
+      <div class="kpi-value" style="color:#f85149">下降</div>
+      <div class="kpi-sub">空头排列</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">最大回撤</div>
+      <div class="kpi-value" style="color:#f85149">-69.88%</div>
+      <div class="kpi-sub">当前 -67.24%</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">年化波动</div>
+      <div class="kpi-value" style="color:#e6edf3">30.97%</div>
+      <div class="kpi-sub">高风险指标</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">夏普</div>
+      <div class="kpi-value" style="color:#f85149">-0.244</div>
+      <div class="kpi-sub">风险调整后收益</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">卡玛</div>
+      <div class="kpi-value" style="color:#f85149">-0.08</div>
+      <div class="kpi-sub">回撤调整后</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">距高点</div>
+      <div class="kpi-value" style="color:#f85149">-34.89%</div>
+      <div class="kpi-sub">52 周阶段高点</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">近 1 年</div>
+      <div class="kpi-value" style="color:#f85149">-26.93%</div>
+      <div class="kpi-sub">区间收益</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">近 3 年</div>
+      <div class="kpi-value" style="color:#f85149">-48.64%</div>
+      <div class="kpi-sub">区间收益</div>
+    </div></div>
+</div>
+
+<div class="card">
+  <div class="section-title">板块共振信号</div>
+  
+    <div class="sector-detail" style="text-align:center;padding:14px">
+      <div style="font-size:22px;margin-bottom:6px">🔴
+        <span style="color:#f85149;font-size:18px;font-weight:700">同步下跌</span>
+      </div>
+      <div style="color:var(--text);font-size:14px;margin-bottom:10px">基金 + 板块同跌，纪律观望</div>
+      <div style="color:var(--muted);font-size:12px;line-height:1.7">
+        主板块 <b style="color:var(--text)">白酒</b> ·
+        板块趋势 <b style="color:#f85149">下降</b>（空头排列）·
+        指数 sz399997<br>
+        板块收益 1m 4.7% / 3m -16.07% / 1y -29.9% ·
+        基金趋势 下降
+      </div>
+    </div>
+</div>
+
+
+<div class="card">
+  <div class="section-title">📰 板块消息面（白酒 · 截至 2026-07-25）</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div style="background:var(--surface2);border-radius:8px;padding:12px;border-top:3px solid #3fb950">
+      <div style="color:#3fb950;font-weight:600;margin-bottom:6px">🔼 利好</div>
+      <ul style="margin:0;padding-left:18px;font-size:12px;line-height:1.7"><li>茅台时隔 8 年于 2026 年 3 月提价，7 月再度提价约 4.8%（年内两次提价）</li><li>行业集中度提升：2025 年 CR5（茅五汾洋泸）营收占比突破 55%</li><li>五粮液股息率约 7.09%，板块高股息 + 低估值吸引配置资金</li><li>中信建投等券商预计 2026 年行业见底，禁酒令最困难时期已过</li></ul>
+    </div>
+    <div style="background:var(--surface2);border-radius:8px;padding:12px;border-top:3px solid #f85149">
+      <div style="color:#f85149;font-weight:600;margin-bottom:6px">🔽 利空</div>
+      <ul style="margin:0;padding-left:18px;font-size:12px;line-height:1.7"><li>批发价格体系崩塌，茅台/五粮液/国窖批价跌回 2017 年水平</li><li>2025 年三季报整体疲软，渠道库存压力犹存，行业仍在出清</li><li>板块技术面仍处下降趋势（与基金 🔴 同步下跌一致）</li></ul>
+    </div>
+  </div>
+  <div style="margin-top:12px;padding:12px;background:var(--surface2);border-left:3px solid #58a6ff;border-radius:6px;font-size:13px;line-height:1.6">💡 2026 白酒处「筑底→复苏」过渡期：茅台两次提价 + 集中度提升 + 高股息是中期利好，但批价修复 + 库存出清仍需时间。消息面复苏早期与技术面下降趋势矛盾——右侧交易需等技术面右侧确认，不宜因消息面利好提前抄底。</div>
+</div>
+
+<div class="disclaimer">
+⚠️ 本报告为右侧交易策略框架的机械信号输出，<b>非投资建议</b>。场外基金 T+1、净值滞后，信号仅供决策参考，盈亏自负。<br>
+fund-deep-analysis v0.1 · 数据源 akshare/天天基金 · 2026-07-24 生成
+</div>
+
+</body>
+</html>

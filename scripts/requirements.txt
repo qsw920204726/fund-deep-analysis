@@ -1,0 +1,4 @@
+# fund-deep-analysis MVP 依赖
+# 用 py 启动器安装：py -m pip install -r requirements.txt
+akshare>=1.14.0
+pandas>=2.0.0
