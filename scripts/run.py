@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -193,6 +194,19 @@ def _load_stage1_from_cache(code: str) -> dict:
     return {"nav": nav, "metrics": metrics, "signals": signals, "sector": sector, "decision": decision}
 
 
+def _open_html(path: Path) -> None:
+    """跨平台自动打开 HTML 报告（Windows os.startfile / Mac open / Linux xdg-open）。失败只提示，不阻断。"""
+    try:
+        if sys.platform == "win32":
+            os.startfile(str(path))
+        elif sys.platform == "darwin":
+            subprocess.Popen(["open", str(path)])
+        else:
+            subprocess.Popen(["xdg-open", str(path)])
+    except Exception as e:
+        print(f"（自动打开失败：{e}。请手动打开：{path}）")
+
+
 # ---------------------------- CLI ----------------------------
 
 def main():
@@ -201,6 +215,7 @@ def main():
     parser.add_argument("--quick", action="store_true", help="stage1+stage2 一把跑（默认快速模式，无 agent）")
     parser.add_argument("--stage1", action="store_true", help="只跑 stage1（深度模式第1步，停在 agent 介入点）")
     parser.add_argument("--stage2", action="store_true", help="只跑 stage2（深度模式第3步，读 .cache + agent_analysis）")
+    parser.add_argument("--no-open", action="store_true", help="不自动打开 HTML 报告")
     args = parser.parse_args()
 
     if args.stage1:
@@ -213,6 +228,8 @@ def main():
         s1 = _load_stage1_from_cache(args.code)
         md_out, html_out = stage2(args.code, s1)
         print(f"\n✅ 作战卡：{md_out}\n✅ HTML 报告：{html_out}")
+        if not args.no_open:
+            _open_html(html_out)
         return
 
     s1 = stage1(args.code)
@@ -220,6 +237,8 @@ def main():
         print(f"\n⏸️  stage1 完成。深度模式：写 agent_analysis.json 后跑 `py run.py {args.code} --stage2`。\n")
     md_out, html_out = stage2(args.code, s1)
     print(f"\n✅ 作战卡：{md_out}\n✅ HTML 报告：{html_out}")
+    if not args.no_open:
+        _open_html(html_out)
 
 
 if __name__ == "__main__":

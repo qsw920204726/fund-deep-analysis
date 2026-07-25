@@ -77,10 +77,10 @@ copy commands\*.md %USERPROFILE%\.claude\commands\   # Windows
 /fund-quick-scan 161725     # 30 秒快速（纯脚本，无消息面）
 ```
 
-**③ 直接跑脚本**
+**③ 直接跑脚本**（跑完自动打开 HTML，加 `--no-open` 跳过）
 ```bash
 cd scripts
-py run.py 161725 --quick         # 快速出作战卡 + HTML
+py run.py 161725 --quick         # 快速出作战卡 + HTML（自动打开）
 py run.py 161725                 # 深度：--stage1 → agent 介入 → --stage2
 ```
 

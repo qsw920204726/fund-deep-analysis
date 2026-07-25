@@ -32,7 +32,7 @@ metadata:
 cd <skill_dir>/scripts
 py run.py <基金代码> --quick
 ```
-一把跑完 stage1 + stage2，直出作战卡（纯脚本，无 agent 介入）。适合速判。
+一把跑完 stage1 + stage2，直出作战卡（纯脚本，无 agent 介入），**跑完自动打开 HTML 报告**（加 `--no-open` 跳过）。适合速判。
 
 ### 深度模式（两段式，agent 介入做定性判断）
 ```bash
