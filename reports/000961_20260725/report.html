@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>右侧作战卡 · 000961</title>
+<style>
+  :root { --bg:#0d1117; --surface:#161b22; --surface2:#1c2230; --border:#30363d;
+           --text:#e6edf3; --muted:#8b949e; --accent:#58a6ff; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+          line-height:1.5; padding:20px; max-width:980px; margin:0 auto; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px; margin-bottom:16px; }
+  h1 { font-size:20px; font-weight:600; }
+  .sub { color:var(--muted); font-size:13px; margin-top:4px; }
+  .head-row { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; }
+  .chip { display:inline-block; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; }
+  .hero { text-align:center; padding:24px 18px; }
+  .hero-action { font-size:26px; font-weight:700; margin:8px 0; }
+  .hero-pos { display:inline-block; padding:4px 16px; border-radius:8px; background:var(--surface2);
+               border:1px solid var(--border); font-size:15px; margin:6px 0 12px; }
+  .hero-rationale { color:var(--muted); font-size:13px; max-width:640px; margin:0 auto; }
+  .section-title { font-size:13px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px;
+                    margin-bottom:12px; font-weight:600; }
+  .chart { width:100%; height:auto; display:block; background:var(--surface2); border-radius:8px; }
+  .tooltip { position:absolute; pointer-events:none; background:var(--surface2); border:1px solid var(--border);
+              padding:6px 10px; border-radius:6px; font-size:12px; opacity:0; transition:opacity 0.1s;
+              transform:translateY(-50%); white-space:nowrap; }
+  .levels-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; }
+  .level-card { background:var(--surface2); border:1px solid; border-radius:10px; padding:12px; }
+  .level-head { display:flex; align-items:center; gap:6px; margin-bottom:6px; }
+  .level-icon { font-size:16px; }
+  .level-label { font-size:12px; color:var(--muted); }
+  .level-status { margin-left:auto; font-size:11px; font-weight:600; }
+  .level-price { font-size:20px; font-weight:700; }
+  .level-cut { font-size:11px; color:var(--muted); margin-top:2px; }
+  .level-trigger { font-size:10px; color:var(--muted); margin-top:6px; line-height:1.3; }
+  .kpi-row { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:10px; }
+  .kpi { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:12px; text-align:center; }
+  .kpi-label { font-size:11px; color:var(--muted); }
+  .kpi-value { font-size:20px; font-weight:700; margin:4px 0; }
+  .kpi-sub { font-size:10px; color:var(--muted); }
+  .sector { text-align:center; padding:14px; color:var(--muted); font-size:13px; }
+  .disclaimer { color:var(--muted); font-size:11px; text-align:center; padding:16px; line-height:1.6; }
+  .legend { display:flex; gap:16px; justify-content:center; margin-top:8px; font-size:11px; color:var(--muted); flex-wrap:wrap; }
+  .legend span { display:inline-flex; align-items:center; gap:4px; }
+  .swatch { width:14px; height:2px; display:inline-block; }
+  @media(max-width:560px){ .levels-grid,.kpi-row { grid-template-columns:repeat(2,1fr); } body{ padding:12px; } }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="head-row">
+    <div>
+      <h1>右侧作战卡 · 000961 · 天弘沪深300ETF联接A</h1>
+      <div class="sub">当前净值 <b style="color:var(--text)">1.6636</b> · 2026-07-24 · 2803 个交易日</div>
+    </div>
+    <div>
+      <span class="chip" style="background:#d2992222;color:#d29922">趋势：震荡</span>
+      <span class="chip" style="background:var(--surface2);color:var(--muted)">多头排列</span>
+      <span class="chip" style="background:#d2992222;color:#d29922"></span>
+    </div>
+  </div>
+</div>
+
+<div class="card hero">
+  <div class="section-title">操作建议</div>
+  <div class="hero-action" style="color:#d29922">观望 · 等待信号</div>
+  <div class="hero-pos">建议仓位 0%</div>
+  <div class="hero-rationale">震荡无明确右侧信号（缺突破或更高低点）。备选关注位：站稳 20 周线。</div>
+</div>
+
+<div class="card">
+  <div class="section-title">净值走势（周线，近 3 年）</div>
+  <div style="position:relative">
+<svg id="navchart" viewBox="0 0 820 300" class="chart" preserveAspectRatio="none">
+  <line x1="36" y1="264.0" x2="784" y2="264.0" stroke="#30363d" stroke-width="1" opacity="0.4"/><text x="4" y="267.0" fill="#8b949e" font-size="9">1.054</text><line x1="36" y1="207.0" x2="784" y2="207.0" stroke="#30363d" stroke-width="1" opacity="0.4"/><text x="4" y="210.0" fill="#8b949e" font-size="9">1.237</text><line x1="36" y1="150.0" x2="784" y2="150.0" stroke="#30363d" stroke-width="1" opacity="0.4"/><text x="4" y="153.0" fill="#8b949e" font-size="9">1.420</text><line x1="36" y1="93.0" x2="784" y2="93.0" stroke="#30363d" stroke-width="1" opacity="0.4"/><text x="4" y="96.0" fill="#8b949e" font-size="9">1.603</text><line x1="36" y1="36.0" x2="784" y2="36.0" stroke="#30363d" stroke-width="1" opacity="0.4"/><text x="4" y="39.0" fill="#8b949e" font-size="9">1.786</text>
+  <line x1="36" y1="94.1" x2="784" y2="94.1" stroke="#6e7681" stroke-width="1" stroke-dasharray="2,4" opacity="0.5"/><text x="784" y="90.1" fill="#6e7681" font-size="10" text-anchor="end" opacity="0.8">MA60 1.5995</text>
+  <line x1="36" y1="68.4" x2="784" y2="68.4" stroke="#8b949e" stroke-width="1" stroke-dasharray="2,4" opacity="0.5"/><text x="784" y="64.4" fill="#8b949e" font-size="10" text-anchor="end" opacity="0.8">MA20 1.682</text>
+  <polyline points="36.0,180.3 40.8,180.3 45.7,180.2 50.5,179.9 55.3,180.0 60.1,180.5 65.0,181.2 69.8,182.0 74.6,182.9 79.4,183.9 84.3,184.6 89.1,185.3 93.9,185.9 98.7,186.8 103.6,187.7 108.4,188.5 113.2,189.2 118.0,189.8 122.9,190.6 127.7,191.2 132.5,191.8 137.3,192.4 142.2,193.1 147.0,193.5 151.8,193.7 156.6,194.4 161.5,195.1 166.3,195.7 171.1,196.6 175.9,197.3 180.8,198.0 185.6,198.5 190.4,198.8 195.3,199.2 200.1,199.8 204.9,200.5 209.7,201.4 214.6,202.3 219.4,203.1 224.2,203.7 229.0,204.3 233.9,205.0 238.7,205.3 243.5,205.7 248.3,206.3 253.2,206.9 258.0,207.7 262.8,208.5 267.6,209.3 272.5,210.1 277.3,210.7 282.1,211.1 286.9,211.8 291.8,212.3 296.6,212.9 301.4,213.5 306.2,214.4 311.1,215.0 315.9,215.9 320.7,216.8 325.5,217.8 330.4,217.8 335.2,217.6 340.0,217.6 344.9,217.3 349.7,216.8 354.5,216.3 359.3,215.6 364.2,215.0 369.0,214.6 373.8,214.1 378.6,213.4 383.5,212.8 388.3,211.9 393.1,211.0 397.9,210.4 402.8,210.0 407.6,209.4 412.4,208.7 417.2,207.9 422.1,206.9 426.9,205.7 431.7,204.4 436.5,203.4 441.4,202.2 446.2,200.8 451.0,199.5 455.8,198.3 460.7,197.0 465.5,196.2 470.3,195.5 475.1,194.9 480.0,194.3 484.8,193.6 489.6,192.8 494.5,192.0 499.3,191.3 504.1,190.4 508.9,189.6 513.8,188.9 518.6,188.1 523.4,187.3 528.2,186.5 533.1,185.4 537.9,184.2 542.7,183.0 547.5,181.8 552.4,180.3 557.2,178.5 562.0,176.4 566.8,174.4 571.7,172.5 576.5,170.4 581.3,168.2 586.1,165.8 591.0,163.4 595.8,161.1 600.6,158.6 605.4,156.0 610.3,153.2 615.1,150.5 619.9,149.0 624.7,147.9 629.6,146.5 634.4,145.2 639.2,144.0 644.1,142.4 648.9,141.3 653.7,139.8 658.5,138.0 663.4,136.5 668.2,135.0 673.0,133.6 677.8,132.1 682.7,130.6 687.5,128.9 692.3,127.1 697.1,125.6 702.0,124.2 706.8,123.0 711.6,121.5 716.4,119.9 721.3,118.4 726.1,116.6 730.9,114.8 735.7,113.1 740.6,111.2 745.4,109.3 750.2,107.5 755.0,105.4 759.9,103.2 764.7,101.1 769.5,99.0 774.3,97.1 779.2,95.7 784.0,94.1" fill="none" stroke="#6e7681" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.55"/>
+  <polyline points="36.0,182.8 40.8,184.0 45.7,183.5 50.5,182.8 55.3,183.1 60.1,184.0 65.0,185.7 69.8,186.7 74.6,187.8 79.4,189.0 84.3,189.9 89.1,190.8 93.9,191.8 98.7,193.1 103.6,194.2 108.4,195.1 113.2,196.7 118.0,197.9 122.9,199.2 127.7,200.7 132.5,203.1 137.3,205.4 142.2,208.6 147.0,211.5 151.8,214.2 156.6,216.6 161.5,218.8 166.3,221.1 171.1,223.9 175.9,225.6 180.8,226.8 185.6,227.5 190.4,228.1 195.3,227.8 200.1,227.9 204.9,228.1 209.7,228.2 214.6,228.7 219.4,228.6 224.2,228.1 229.0,227.1 233.9,225.5 238.7,223.8 243.5,222.9 248.3,221.6 253.2,220.1 258.0,218.7 262.8,217.8 267.6,216.2 272.5,215.7 277.3,215.5 282.1,215.1 286.9,215.5 291.8,216.0 296.6,216.8 301.4,217.3 306.2,218.2 311.1,218.6 315.9,219.7 320.7,221.5 325.5,223.1 330.4,222.5 335.2,220.3 340.0,218.4 344.9,216.1 349.7,213.7 354.5,211.5 359.3,208.0 364.2,205.1 369.0,202.5 373.8,200.0 378.6,197.6 383.5,194.7 388.3,191.7 393.1,188.3 397.9,185.9 402.8,183.6 407.6,181.0 412.4,177.7 417.2,174.2 422.1,170.5 426.9,169.1 431.7,169.1 436.5,169.0 441.4,168.9 446.2,168.5 451.0,168.3 455.8,169.3 460.7,169.7 465.5,170.3 470.3,171.0 475.1,171.9 480.0,172.6 484.8,173.0 489.6,173.4 494.5,172.7 499.3,172.1 504.1,171.7 508.9,171.5 513.8,171.2 518.6,170.8 523.4,170.4 528.2,170.0 533.1,168.8 537.9,167.5 542.7,166.9 547.5,165.5 552.4,163.6 557.2,160.6 562.0,156.3 566.8,152.4 571.7,148.2 576.5,144.0 581.3,140.0 586.1,135.7 591.0,131.5 595.8,127.7 600.6,123.2 605.4,118.8 610.3,114.2 615.1,110.3 619.9,107.6 624.7,104.7 629.6,101.8 634.4,99.3 639.2,96.5 644.1,93.5 648.9,91.1 653.7,88.9 658.5,87.5 663.4,86.1 668.2,85.0 673.0,84.1 677.8,83.3 682.7,82.8 687.5,82.4 692.3,81.4 697.1,81.8 702.0,82.4 706.8,83.5 711.6,83.4 716.4,81.8 721.3,80.4 726.1,79.2 730.9,77.5 735.7,75.9 740.6,74.8 745.4,73.3 750.2,72.9 755.0,72.5 759.9,71.1 764.7,70.1 769.5,68.8 774.3,68.0 779.2,68.6 784.0,68.4" fill="none" stroke="#8b949e" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.7"/>
+  <polyline id="navline" points="36.0,184.3 40.8,190.8 45.7,173.6 50.5,170.7 55.3,183.9 60.1,193.9 65.0,201.0 69.8,192.8 74.6,197.9 79.4,201.0 84.3,198.0 89.1,202.9 93.9,205.6 98.7,220.8 103.6,215.4 108.4,213.2 113.2,213.0 118.0,214.9 122.9,217.9 127.7,223.4 132.5,231.4 137.3,237.2 142.2,237.4 147.0,228.1 151.8,238.3 156.6,242.9 161.5,244.4 166.3,238.1 171.1,253.6 175.9,235.1 180.8,222.5 185.6,217.7 190.4,217.1 195.3,214.5 200.1,217.1 204.9,217.8 209.7,214.8 214.6,224.1 219.4,217.6 224.2,213.2 229.0,211.0 233.9,204.7 238.7,203.2 243.5,210.7 248.3,212.8 253.2,212.8 258.0,215.4 262.8,219.4 267.6,222.1 272.5,225.0 277.3,218.6 282.1,210.9 286.9,223.6 291.8,226.0 296.6,231.3 301.4,229.6 306.2,231.4 311.1,231.7 315.9,240.9 320.7,248.2 325.5,243.9 330.4,191.8 335.2,160.1 340.0,172.2 344.9,167.8 349.7,164.6 354.5,171.3 359.3,149.2 364.2,163.0 369.0,173.6 373.8,168.3 378.6,162.5 383.5,166.5 388.3,166.8 393.1,161.3 397.9,182.4 402.8,186.5 407.6,178.3 412.4,175.7 417.2,177.3 422.1,169.6 426.9,164.9 431.7,160.9 436.5,170.0 441.4,164.4 446.2,158.0 451.0,167.5 455.8,167.4 460.7,172.9 465.5,184.4 470.3,182.0 475.1,180.2 480.0,181.8 484.8,174.0 489.6,169.3 494.5,169.8 499.3,174.0 504.1,170.3 508.9,170.4 513.8,171.7 518.6,162.9 523.4,156.3 528.2,151.8 533.1,146.0 537.9,138.5 542.7,145.8 547.5,140.5 552.4,130.2 557.2,111.7 562.0,99.0 566.8,102.9 571.7,96.4 576.5,98.5 581.3,93.4 586.1,83.9 591.0,86.5 595.8,96.8 600.6,81.2 605.4,82.9 610.3,79.0 615.1,84.2 619.9,102.3 624.7,94.7 629.6,88.3 634.4,88.6 639.2,89.1 644.1,79.6 648.9,82.5 653.7,68.9 658.5,71.3 663.4,74.3 668.2,73.8 673.0,80.1 677.8,78.2 682.7,73.1 687.5,78.5 692.3,77.7 697.1,88.3 702.0,95.3 706.8,101.8 711.6,81.3 716.4,71.5 721.3,66.7 726.1,62.4 730.9,55.5 735.7,56.6 740.6,57.9 745.4,52.6 750.2,60.2 755.0,63.8 759.9,46.4 764.7,53.2 769.5,55.3 774.3,61.1 779.2,86.7 784.0,74.2" fill="none" stroke="#58a6ff" stroke-width="1.8" stroke-linejoin="round"/>
+  <circle id="navdot" cx="784.0" cy="74.2" r="3.5" fill="#58a6ff" stroke="#0d1117" stroke-width="1.5"/>
+  <line id="cross" x1="0" y1="36" x2="0" y2="264" stroke="#e6edf3" stroke-width="1" opacity="0" stroke-dasharray="3,3"/>
+  <circle id="hoverdot" r="3.5" fill="#e6edf3" stroke="#0d1117" stroke-width="1.5" opacity="0"/>
+</svg>
+<div id="tooltip" class="tooltip"></div>
+<script>
+(function(){
+  const svg=document.getElementById('navchart');
+  const tip=document.getElementById('tooltip');
+  const cross=document.getElementById('cross');
+  const hdot=document.getElementById('hoverdot');
+  const line=document.getElementById('navline');
+  const pts=line.getAttribute('points').trim().split(/\s+/).map(p=>p.split(',').map(Number));
+  const dates=['2023-07-14', '2023-07-21', '2023-07-28', '2023-08-04', '2023-08-11', '2023-08-18', '2023-08-25', '2023-09-01', '2023-09-08', '2023-09-15', '2023-09-22', '2023-09-28', '2023-10-13', '2023-10-20', '2023-10-27', '2023-11-03', '2023-11-10', '2023-11-17', '2023-11-24', '2023-12-01', '2023-12-08', '2023-12-15', '2023-12-22', '2023-12-31', '2024-01-05', '2024-01-12', '2024-01-19', '2024-01-26', '2024-02-02', '2024-02-08', '2024-02-23', '2024-03-01', '2024-03-08', '2024-03-15', '2024-03-22', '2024-03-29', '2024-04-03', '2024-04-12', '2024-04-19', '2024-04-26', '2024-04-30', '2024-05-10', '2024-05-17', '2024-05-24', '2024-05-31', '2024-06-07', '2024-06-14', '2024-06-21', '2024-06-30', '2024-07-05', '2024-07-12', '2024-07-19', '2024-07-26', '2024-08-02', '2024-08-09', '2024-08-16', '2024-08-23', '2024-08-30', '2024-09-06', '2024-09-13', '2024-09-20', '2024-09-27', '2024-09-30', '2024-10-11', '2024-10-18', '2024-10-25', '2024-11-01', '2024-11-08', '2024-11-15', '2024-11-22', '2024-11-29', '2024-12-06', '2024-12-13', '2024-12-20', '2024-12-27', '2025-01-03', '2025-01-10', '2025-01-17', '2025-01-24', '2025-01-27', '2025-02-07', '2025-02-14', '2025-02-21', '2025-02-28', '2025-03-07', '2025-03-14', '2025-03-21', '2025-03-28', '2025-04-03', '2025-04-11', '2025-04-18', '2025-04-25', '2025-04-30', '2025-05-09', '2025-05-16', '2025-05-23', '2025-05-30', '2025-06-06', '2025-06-13', '2025-06-20', '2025-06-27', '2025-07-04', '2025-07-11', '2025-07-18', '2025-07-25', '2025-08-01', '2025-08-08', '2025-08-15', '2025-08-22', '2025-08-29', '2025-09-05', '2025-09-12', '2025-09-19', '2025-09-26', '2025-09-30', '2025-10-10', '2025-10-17', '2025-10-24', '2025-10-31', '2025-11-07', '2025-11-14', '2025-11-21', '2025-11-28', '2025-12-05', '2025-12-12', '2025-12-19', '2025-12-26', '2025-12-31', '2026-01-09', '2026-01-16', '2026-01-23', '2026-01-30', '2026-02-06', '2026-02-13', '2026-02-27', '2026-03-06', '2026-03-13', '2026-03-20', '2026-03-27', '2026-04-03', '2026-04-10', '2026-04-17', '2026-04-24', '2026-04-30', '2026-05-08', '2026-05-15', '2026-05-22', '2026-05-29', '2026-06-05', '2026-06-12', '2026-06-18', '2026-06-26', '2026-07-03', '2026-07-10', '2026-07-17', '2026-07-24'];
+  const vals=[1.3099,1.2890,1.3442,1.3534,1.3109,1.2790,1.2560,1.2825,1.2660,1.2562,1.2659,1.2501,1.2414,1.1925,1.2098,1.2168,1.2175,1.2116,1.2019,1.1842,1.1585,1.1397,1.1392,1.1691,1.1362,1.1216,1.1168,1.1370,1.0870,1.1467,1.1870,1.2024,1.2045,1.2127,1.2045,1.2021,1.2118,1.1820,1.2029,1.2168,1.2241,1.2441,1.2489,1.2249,1.2183,1.2181,1.2097,1.1971,1.1884,1.1789,1.1994,1.2242,1.1834,1.1757,1.1588,1.1642,1.1584,1.1575,1.1278,1.1044,1.1183,1.2856,1.3876,1.3487,1.3628,1.3729,1.3514,1.4224,1.3781,1.3440,1.3611,1.3798,1.3669,1.3659,1.3835,1.3158,1.3027,1.3290,1.3374,1.3322,1.3570,1.3721,1.3850,1.3556,1.3737,1.3943,1.3638,1.3639,1.3463,1.3095,1.3172,1.3229,1.3177,1.3430,1.3578,1.3562,1.3427,1.3548,1.3544,1.3503,1.3784,1.3998,1.4143,1.4328,1.4570,1.4333,1.4505,1.4837,1.5430,1.5837,1.5714,1.5920,1.5854,1.6019,1.6324,1.6241,1.5909,1.6411,1.6354,1.6481,1.6313,1.5733,1.5977,1.6181,1.6171,1.6157,1.6461,1.6369,1.6805,1.6727,1.6631,1.6647,1.6445,1.6505,1.6671,1.6496,1.6522,1.6181,1.5957,1.5747,1.6408,1.6721,1.6877,1.7015,1.7234,1.7201,1.7158,1.7329,1.7084,1.6969,1.7529,1.7309,1.7242,1.7056,1.6234,1.6636];
+  function pt(e){
+    const r=svg.getBoundingClientRect();
+    const x=(e.clientX-r.left)/r.width*820;
+    let best=0,bd=1e9;
+    for(let i=0;i<pts.length;i++){if(Math.abs(pts[i][0]-x)<bd){bd=Math.abs(pts[i][0]-x);best=i;}}
+    const px=pts[best][0],py=pts[best][1];
+    hdot.setAttribute('cx',px);hdot.setAttribute('cy',py);hdot.setAttribute('opacity',1);
+    cross.setAttribute('x1',px);cross.setAttribute('x2',px);cross.setAttribute('opacity',0.5);
+    tip.style.opacity=1;
+    tip.innerHTML=dates[best]+'<br><b>'+vals[best].toFixed(4)+'</b>';
+    const left=Math.min(px/820*100+1, 78);
+    tip.style.left=left+'%';
+  }
+  svg.addEventListener('mousemove',pt);
+  svg.addEventListener('mouseleave',()=>{hdot.setAttribute('opacity',0);cross.setAttribute('opacity',0);tip.style.opacity=0;});
+})();
+</script></div>
+  <div class="legend">
+    <span><span class="swatch" style="background:#58a6ff"></span>单位净值</span>
+    <span><span class="swatch" style="background:#8b949e;border-top:1px dashed #8b949e"></span>MA20周</span>
+    <span><span class="swatch" style="background:#6e7681"></span>MA60周</span>
+  </div>
+</div>
+
+<div class="card">
+  <div class="section-title">关键净值位（建仓 / 加仓 / 止盈 / 止损）</div>
+  <div class="levels-grid">
+    <div class="level-card" style="border-color:#d2992233">
+      <div class="level-head"><span class="level-icon">🏗️</span>
+        <span class="level-label">建仓</span>
+        <span class="level-status" style="color:#d29922">暂不建议</span></div>
+      <div class="level-price" style="color:#d29922">1.682</div>
+      <div class="level-cut">底仓 30%</div>
+      <div class="level-trigger">震荡中缺更高低点 / 突破，右侧信号未现。关注位 MA20(1.682)，站稳 + 企稳结构出现再议。</div>
+    </div>
+    <div class="level-card" style="border-color:#f8514933">
+      <div class="level-head"><span class="level-icon">➕</span>
+        <span class="level-label">加仓</span>
+        <span class="level-status" style="color:#f85149">不建议</span></div>
+      <div class="level-price" style="color:#f85149">—</div>
+      <div class="level-cut">金字塔 15→5%</div>
+      <div class="level-trigger">趋势为「震荡」、无上升结构，加仓 = 接飞刀 / 摊低成本，违反右侧纪律。</div>
+    </div>
+    <div class="level-card" style="border-color:#8b949e33">
+      <div class="level-head"><span class="level-icon">①</span>
+        <span class="level-label">止盈</span>
+        <span class="level-status" style="color:#8b949e">若持有·触发即撤</span></div>
+      <div class="level-price" style="color:#8b949e">1.6137</div>
+      <div class="level-cut">减 30%</div>
+      <div class="level-trigger">跌破近端支撑（约 1.6137）说明短线走弱，先减 30% 锁利润。</div>
+    </div>
+    <div class="level-card" style="border-color:#8b949e33">
+      <div class="level-head"><span class="level-icon">②</span>
+        <span class="level-label">止盈</span>
+        <span class="level-status" style="color:#8b949e">若持有·触发即撤</span></div>
+      <div class="level-price" style="color:#8b949e">1.682</div>
+      <div class="level-cut">减 40%</div>
+      <div class="level-trigger">跌破 MA20(1.682) + 死叉，中期趋势走弱，再减 40%。</div>
+    </div>
+    <div class="level-card" style="border-color:#8b949e33">
+      <div class="level-head"><span class="level-icon">🛑</span>
+        <span class="level-label">移动止盈</span>
+        <span class="level-status" style="color:#8b949e">若持有·触发即撤</span></div>
+      <div class="level-price" style="color:#8b949e">1.5776</div>
+      <div class="level-cut">清仓</div>
+      <div class="level-trigger">从阶段高点 1.7529 回撤 10%（至 1.5776）触发，平衡型保护利润、让利润奔跑。</div>
+    </div>
+    <div class="level-card" style="border-color:#8b949e33">
+      <div class="level-head"><span class="level-icon">✕</span>
+        <span class="level-label">止损</span>
+        <span class="level-status" style="color:#8b949e">若持有·触发即撤</span></div>
+      <div class="level-price" style="color:#8b949e">1.6969</div>
+      <div class="level-cut">清仓</div>
+      <div class="level-trigger">跌破前低 1.6969 → 更低低点、下跌结构延续，右侧纪律坚决清仓，不抱侥幸。</div>
+    </div></div>
+</div>
+
+<div class="card">
+  <div class="section-title">风险收益指标</div>
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="kpi-label">趋势</div>
+      <div class="kpi-value" style="color:#e6edf3">震荡</div>
+      <div class="kpi-sub">多头排列</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">最大回撤</div>
+      <div class="kpi-value" style="color:#f85149">-46.35%</div>
+      <div class="kpi-sub">当前 -7.95%</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">年化波动</div>
+      <div class="kpi-value" style="color:#e6edf3">20.38%</div>
+      <div class="kpi-sub"></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">夏普</div>
+      <div class="kpi-value" style="color:#3fb950">0.132</div>
+      <div class="kpi-sub">风险调整后收益</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">卡玛</div>
+      <div class="kpi-value" style="color:#3fb950">0.101</div>
+      <div class="kpi-sub">回撤调整后</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">距高点</div>
+      <div class="kpi-value" style="color:#e6edf3">-5.09%</div>
+      <div class="kpi-sub">52 周阶段高点</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">近 1 年</div>
+      <div class="kpi-value" style="color:#3fb950">17.92%</div>
+      <div class="kpi-sub">区间收益</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">近 3 年</div>
+      <div class="kpi-value" style="color:#3fb950">29.47%</div>
+      <div class="kpi-sub">区间收益</div>
+    </div></div>
+</div>
+
+
+<div class="card">
+  <div class="section-title">📉 历史回测（信号在此基金的历史表现）</div>
+  <div class="kpi-row">
+    
+    <div class="kpi">
+      <div class="kpi-label">交易笔数</div>
+      <div class="kpi-value" style="color:#e6edf3">14</div>
+      <div class="kpi-sub"></div>
+    </div>
+    
+    <div class="kpi">
+      <div class="kpi-label">胜率</div>
+      <div class="kpi-value" style="color:#f85149">28.6%</div>
+      <div class="kpi-sub">偏低</div>
+    </div>
+    
+    <div class="kpi">
+      <div class="kpi-label">平均单笔</div>
+      <div class="kpi-value" style="color:#3fb950">2.84%</div>
+      <div class="kpi-sub"></div>
+    </div>
+    
+    <div class="kpi">
+      <div class="kpi-label">累计</div>
+      <div class="kpi-value" style="color:#f85149">39.91%</div>
+      <div class="kpi-sub"></div>
+    </div>
+  </div>
+  <div class="sub" style="margin-top:10px">单笔最大盈亏：+28.22% / -5.58%</div>
+  <div style="margin-top:10px;padding:10px;background:var(--surface2);border-left:3px solid #d29922;border-radius:6px;font-size:13px">⚠️ 历史胜率偏低——回测差 ≠ 不能做，但信号未经历史验证可靠，<b>别盲信单次作战卡</b>。</div>
+</div>
+
+
+<div class="card">
+  <div class="section-title">💰 估值锚（沪深300 PE 近 5 年）</div>
+  <div class="kpi-row">
+    
+    <div class="kpi">
+      <div class="kpi-label">当前PE</div>
+      <div class="kpi-value" style="color:#e6edf3">13.68</div>
+      <div class="kpi-sub"></div>
+    </div>
+    
+    <div class="kpi">
+      <div class="kpi-label">历史分位</div>
+      <div class="kpi-value" style="color:#f85149">95.5%</div>
+      <div class="kpi-sub">极贵（高估区间）</div>
+    </div>
+    
+    <div class="kpi">
+      <div class="kpi-label">近5年区间</div>
+      <div class="kpi-value" style="color:#e6edf3">9.61~14.19</div>
+      <div class="kpi-sub"></div>
+    </div>
+  </div>
+  <div style="margin-top:10px;padding:10px;background:var(--surface2);border-left:3px solid #f85149;border-radius:6px;font-size:13px">估值 <b style="color:#f85149">极贵（高估区间）</b>——分位高=贵警惕高位接盘，分位低=便宜右侧安全垫厚。</div>
+</div>
+
+<div class="card">
+  <div class="section-title">板块共振信号</div>
+  
+    <div class="sector-detail" style="text-align:center;padding:14px">
+      <div style="font-size:22px;margin-bottom:6px">🟡
+        <span style="color:#d29922;font-size:18px;font-weight:700">共振观望</span>
+      </div>
+      <div style="color:var(--text);font-size:14px;margin-bottom:10px">基金 + 板块均未确认右侧</div>
+      <div style="color:var(--muted);font-size:12px;line-height:1.7">
+        主板块 <b style="color:var(--text)">宽基-沪深300</b> ·
+        板块趋势 <b style="color:#d29922">震荡</b>（多头排列）·
+        指数 sh000300<br>
+        板块收益 1m -5.94% / 3m -2.49% / 1y 16.48% ·
+        基金趋势 震荡
+      </div>
+    </div>
+</div>
+
+
+
+<div class="disclaimer">
+⚠️ 本报告为右侧交易策略框架的机械信号输出，<b>非投资建议</b>。场外基金 T+1、净值滞后，信号仅供决策参考，盈亏自负。<br>
+fund-deep-analysis v0.1 · 数据源 akshare/天天基金 · 2026-07-24 生成
+</div>
+
+</body>
+</html>

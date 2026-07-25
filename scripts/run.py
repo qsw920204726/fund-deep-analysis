@@ -47,6 +47,8 @@ from right_side_engine import decide, render_battle_card  # noqa: E402
 from sector_exposure import identify_sector, industry_snapshot  # noqa: E402
 from sector_resonance import compute_resonance  # noqa: E402
 from report_render import render_html  # noqa: E402
+from backtest import backtest  # noqa: E402
+from valuation import compute_valuation  # noqa: E402
 
 
 # ---------------------------- 工具 ----------------------------
@@ -140,9 +142,17 @@ def stage1(code: str) -> dict:
     progress(70, "板块识别 + 共振信号灯…")
     sector = _collect_sector(code, signals)
 
-    progress(85, "生成右侧骨架决策（建仓/加仓/止盈/止损）…")
+    progress(82, "生成右侧骨架决策（建仓/加仓/止盈/止损）…")
     decision = decide(metrics, signals, sector)
+
+    progress(92, "回测右侧信号历史表现…")
+    bt = backtest(nav)
+    decision["backtest"] = bt
+
+    progress(96, "估值锚（PE 历史分位）…")
+    decision["valuation"] = compute_valuation(sector.get("sector_id", {}).get("main_sector"))
     save_json(cache / "rightside.json", decision)
+    save_json(cache / "backtest.json", bt)
 
     progress(100, f"stage1 完成 · 趋势={signals['trend']['regime']} · "
                   f"板块={sector.get('label', '?')} · {decision['action']}")

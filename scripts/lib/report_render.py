@@ -250,6 +250,47 @@ def _sector_news_block(news: dict | None) -> str:
 </div>'''
 
 
+def _backtest_block(bt: dict | None) -> str:
+    """历史回测卡片：信号在该基金的历史胜率/收益。"""
+    if not bt or not bt.get("n_trades") or bt.get("win_rate") is None:
+        return ""
+    wr = bt["win_rate"]
+    tone_key = "bad" if wr < 40 else ("good" if wr >= 55 else None)
+    verdict = "偏低" if wr < 40 else ("尚可" if wr < 55 else "较好")
+    return f'''
+<div class="card">
+  <div class="section-title">📉 历史回测（信号在此基金的历史表现）</div>
+  <div class="kpi-row">
+    {_kpi_tile("交易笔数", bt['n_trades'], "", None)}
+    {_kpi_tile("胜率", f"{wr}%", verdict, tone_key)}
+    {_kpi_tile("平均单笔", f"{bt['avg_return_pct']}%", "", "bad" if bt['avg_return_pct'] < 0 else "good")}
+    {_kpi_tile("累计", f"{bt['total_return_pct']}%", "", tone_key)}
+  </div>
+  <div class="sub" style="margin-top:10px">单笔最大盈亏：+{bt['max_gain_pct']}% / {bt['max_loss_pct']}%</div>
+  <div style="margin-top:10px;padding:10px;background:var(--surface2);border-left:3px solid {C['warn']};border-radius:6px;font-size:13px">⚠️ 历史胜率{verdict}——回测差 ≠ 不能做，但信号未经历史验证可靠，<b>别盲信单次作战卡</b>。</div>
+</div>'''
+
+
+def _valuation_block(val: dict | None) -> str:
+    """估值锚卡片：PE 历史分位。"""
+    if not val or not val.get("available"):
+        return (f'<div class="card"><div class="section-title">💰 估值锚</div>'
+                f'<div class="sub" style="padding:10px">{_esc((val or {}).get("reason", "估值不可用"))}</div></div>')
+    pct = val["pe_percentile"]
+    tone = "good" if pct < 40 else ("bad" if pct >= 80 else None)
+    color = {"good": C["good"], "bad": C["bad"]}.get(tone, C["text"])
+    return f'''
+<div class="card">
+  <div class="section-title">💰 估值锚（{_esc(val['index_name'])} PE 近 {val['lookback_years']} 年）</div>
+  <div class="kpi-row">
+    {_kpi_tile("当前PE", val['current_pe'], "")}
+    {_kpi_tile("历史分位", f"{pct}%", val['verdict'], tone)}
+    {_kpi_tile("近5年区间", f"{val['pe_min']}~{val['pe_max']}", "")}
+  </div>
+  <div style="margin-top:10px;padding:10px;background:var(--surface2);border-left:3px solid {color};border-radius:6px;font-size:13px">估值 <b style="color:{color}">{val['verdict']}</b>——分位高=贵警惕高位接盘，分位低=便宜右侧安全垫厚。</div>
+</div>'''
+
+
 def render_html(decision: dict, metrics: dict, signals: dict, nav: pd.DataFrame,
                 fund_code: str, fund_name: str = "", sector: dict | None = None) -> str:
     weekly = to_weekly(nav)
@@ -356,6 +397,10 @@ def render_html(decision: dict, metrics: dict, signals: dict, nav: pd.DataFrame,
   <div class="section-title">风险收益指标</div>
   {kpi}
 </div>
+
+{_backtest_block(decision.get("backtest"))}
+
+{_valuation_block(decision.get("valuation"))}
 
 <div class="card">
   <div class="section-title">板块共振信号</div>

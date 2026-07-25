@@ -161,6 +161,41 @@ def _sector_news_md(news: dict | None) -> list[str]:
     return out + [""]
 
 
+def _backtest_md(bt: dict | None) -> list[str]:
+    """历史回测 markdown 行：信号在该基金的历史胜率/收益。无数据返回空行。"""
+    if not bt or not bt.get("n_trades"):
+        return [""]
+    wr = bt["win_rate"]
+    if wr is None:
+        return ["", "## 📉 历史回测", "", "- 样本不足，无交易记录。", ""]
+    tone = ("偏低，信号/参数可能不适合该标的，需谨慎或调参" if wr < 40
+            else ("尚可" if wr < 55 else "较好"))
+    return [
+        "",
+        "## 📉 历史回测（右侧信号在此基金的历史表现）",
+        "",
+        f"- 交易 **{bt['n_trades']}** 笔 · 胜率 **{wr}%** · 平均单笔 {bt['avg_return_pct']}% · 累计 {bt['total_return_pct']}%",
+        f"- 单笔最大盈亏：+{bt['max_gain_pct']}% / {bt['max_loss_pct']}%",
+        f"> ⚠️ 历史胜率{tone}。回测差 ≠ 一定不做，但说明信号在这只标的未经历史验证可靠，**别盲信单次作战卡**。",
+        "",
+    ]
+
+
+def _valuation_md(val: dict | None) -> list[str]:
+    """估值锚 markdown 行（PE 历史分位）。"""
+    if not val or not val.get("available"):
+        return ["", "## 💰 估值锚", "", f"- {(val or {}).get('reason', '估值不可用')}", ""]
+    return [
+        "",
+        f"## 💰 估值锚（{val['index_name']} PE 近 {val['lookback_years']} 年）",
+        "",
+        f"- 当前 PE **{val['current_pe']}** · 历史 {val['pe_min']}~{val['pe_max']} · 分位 **{val['pe_percentile']}%**",
+        f"- 判断：**{val['verdict']}**",
+        f"> 分位高 = 贵，技术面右侧信号在此要警惕高位接盘；分位低 = 便宜，右侧安全垫更厚。",
+        "",
+    ]
+
+
 # ---------------------------- 作战卡渲染 ----------------------------
 
 def render_battle_card(decision: dict, metrics: dict, signals: dict, fund_code: str) -> str:
@@ -206,7 +241,8 @@ def render_battle_card(decision: dict, metrics: dict, signals: dict, fund_code: 
         f"1年 {_p(metrics.get('period_returns_pct',{}).get('1y'))}% / "
         f"3年 {_p(metrics.get('period_returns_pct',{}).get('3y'))}%",
         f"- 距阶段高点(52周): **{_p(lv.get('pct_below_stage_high'))}%**",
-        "",
+        *_backtest_md(decision.get("backtest")),
+        *_valuation_md(decision.get("valuation")),
         f"## 🟢🟡🔴 板块信号：{decision['sector_signal']}",
         *_sector_news_md(decision.get("sector_news")),
         "---",

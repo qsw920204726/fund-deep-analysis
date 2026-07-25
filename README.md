@@ -23,6 +23,9 @@
 | 📰 板块消息面 | agent 用 WebSearch 搜主板块最新利好/利空，分类总结（深度模式） |
 | 📈 风险指标 | 最大回撤 / 年化波动 / 夏普 / 卡玛 / 索提诺 + 多周期收益 |
 | 🌐 HTML 报告 | Bloomberg 深色风，净值曲线 SVG + hover、净值位卡片、消息面双栏，单文件可分享 |
+| 🔬 历史回测 | 右侧信号在该基金的历史胜率 / 收益（防盲信未验证信号，如白酒胜率仅 14%） |
+| 💰 估值锚 | 宽基 PE 历史分位（防技术面高位接盘；行业基金数据源受限降级） |
+| 🧩 组合体检 | 多基金相关性 + 行业暴露重叠（防单只都对、组合集中爆雷） |
 
 ## 效果示例（161725 招商中证白酒 · 2026-07-25）
 
@@ -82,6 +85,7 @@ copy commands\*.md %USERPROFILE%\.claude\commands\   # Windows
 cd scripts
 py run.py 161725 --quick         # 快速出作战卡 + HTML（自动打开）
 py run.py 161725                 # 深度：--stage1 → agent 介入 → --stage2
+py lib/portfolio.py 161725 005827 110023   # 组合体检（多基金相关性 + 集中度）
 ```
 
 ## 工作原理
@@ -127,7 +131,10 @@ fund-deep-analysis/
 │       ├── right_side_engine.py   # ★ 右侧决策引擎（灵魂）
 │       ├── sector_exposure.py     # 板块识别（行业/宽基/均衡）
 │       ├── sector_resonance.py    # 板块共振信号灯
-│       └── report_render.py       # Bloomberg HTML 报告
+│       ├── report_render.py       # Bloomberg HTML 报告
+│       ├── backtest.py            # 历史回测（信号胜率）
+│       ├── valuation.py           # 估值锚（PE 分位）
+│       └── portfolio.py           # 组合体检（相关性 / 集中度）
 ├── references/               # 按需加载的方法论
 ├── assets/                   # 参数定值 + 数据契约 + 免责
 └── reports/161725_*/         # 示例报告（markdown + HTML）
@@ -143,8 +150,9 @@ fund-deep-analysis/
 - ✅ 板块共振（行业 + 宽基 14 类 + 均衡）
 - ✅ 板块消息面（agent WebSearch）
 - ✅ Bloomberg HTML 报告 + 宽基识别
+- ✅ **历史回测**（信号胜率）+ **估值锚**（PE 分位）+ **组合体检**（相关性/集中度）—— 补齐"敢照着做"的关键缺口
 - ⏳ Phase 3：基金经理画像 / 多基金对比 / 按条件筛选 / self-review gate
-- ⏳ v2：Brinson 业绩归因 / 场内 ETF / 累计净值
+- ⏳ v2：Brinson 业绩归因 / 场内 ETF / 累计净值 / 行业指数估值
 
 ## ⚠️ 免责
 
