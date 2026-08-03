@@ -11,16 +11,16 @@
 
 【参数】（用户已定）
   - 时间框架：周线为主（20/60 周）+ 日线辅助
-  - 移动止盈：从阶段高点回撤 10%（平衡型）
+  - 移动止盈：从阶段高点回撤 12%（满仓型）
 
 每个操作位都给出 status（建议/不建议/若持有触发）+ reason（引用具体数字）。
 本模块只做"机械决策"，agent 可在 stage2 用 agent_analysis.json 覆盖。
 """
 from __future__ import annotations
 
-TRAILING_STOP_PCT = 0.10   # 移动止盈回撤阈值（平衡型）
-BASE_POSITION = 0.30       # 右侧底仓
-FULL_POSITION = 0.50       # 主升浪确认后上限
+TRAILING_STOP_PCT = 0.12   # 移动止盈回撤阈值（满仓型）
+BASE_POSITION = 0.40       # 右侧底仓
+FULL_POSITION = 1.00       # 主升浪确认后上限
 
 
 def _build_levels(regime: str, struct: dict, breakout: dict, lv: dict,
@@ -29,6 +29,8 @@ def _build_levels(regime: str, struct: dict, breakout: dict, lv: dict,
     current = lv["current"]
     ma20w = lv["ma20w"]
     ma60w = lv["ma60w"]
+    ma5d = lv.get("ma5d")
+    ma10d = lv.get("ma10d")
     swing_low = lv["recent_swing_low"]
     stage_high = lv["stage_high_52w"]
     higher_lows = struct["higher_lows"]
@@ -51,12 +53,12 @@ def _build_levels(regime: str, struct: dict, breakout: dict, lv: dict,
         e_reason = "震荡中出现更高低点 + 突破，右侧初现。轻仓试探，破前低即止损。"
     else:  # 上升
         e_status, e_price = "建议", ma20w
-        e_reason = "周线上升 + 更高低点，趋势确认。底仓 30%，主升浪确认补到 50%。"
+        e_reason = "周线上升 + 更高低点，趋势确认。底仓 40%，主升确认补到 100%。"
 
     # ---------- 加仓 ----------
     if regime == "上升" and higher_lows:
         a_status, a_price = "建议", ma20w
-        a_reason = f"上升趋势中回踩 MA20({ma20w}) 不破时加仓（均线买法），金字塔 30→15→5%。"
+        a_reason = f"上升趋势中回踩 MA20({ma20w}) 不破时加仓（均线买法），金字塔 40→35→25%。"
     elif regime == "上升":
         a_status, a_price = "暂不建议", ma60w
         a_reason = f"上升但低点结构待确认，等更高低点。关注回踩 MA60({ma60w})。"
@@ -66,18 +68,19 @@ def _build_levels(regime: str, struct: dict, breakout: dict, lv: dict,
 
     return [
         {"key": "entry", "icon": "🏗️", "label": "建仓", "status": e_status, "price": e_price,
-         "cut": "底仓 30%", "reason": e_reason},
+         "cut": "底仓 40%", "reason": e_reason},
         {"key": "add", "icon": "➕", "label": "加仓", "status": a_status, "price": a_price,
-         "cut": "金字塔 15→5%", "reason": a_reason},
+         "cut": "金字塔 35→25%", "reason": a_reason},
         {"key": "tp1", "icon": "①", "label": "止盈", "status": "若持有·触发即撤",
-         "price": round(current * 0.97, 4), "cut": "减 30%",
-         "reason": f"跌破近端支撑（约 {round(current * 0.97, 4)}）说明短线走弱，先减 30% 锁利润。"},
+         "price": min(ma5d, ma10d) if (ma5d and ma10d) else round(current * 0.97, 4),
+         "cut": "减 30%",
+         "reason": f"跌破 MA5d({ma5d})/MA10d({ma10d}) 说明短线走弱，先减 30% 锁利润。"},
         {"key": "tp2", "icon": "②", "label": "止盈", "status": "若持有·触发即撤",
          "price": ma20w, "cut": "减 40%",
          "reason": f"跌破 MA20({ma20w}) + 死叉，中期趋势走弱，再减 40%。"},
         {"key": "trailing", "icon": "🛑", "label": "移动止盈", "status": "若持有·触发即撤",
          "price": trailing, "cut": "清仓",
-         "reason": f"从阶段高点 {stage_high} 回撤 10%（至 {trailing}）触发，平衡型保护利润、让利润奔跑。"},
+         "reason": f"从阶段高点 {stage_high} 回撤 12%（至 {trailing}）触发，满仓型保护利润、让利润奔跑。"},
         {"key": "stop", "icon": "✕", "label": "止损", "status": "若持有·触发即撤",
          "price": swing_low, "cut": "清仓",
          "reason": f"跌破前低 {swing_low} → 更低低点、下跌结构延续，右侧纪律坚决清仓，不抱侥幸。"},

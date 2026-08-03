@@ -11,3 +11,6 @@ venv/
 # OS
 .DS_Store
 Thumbs.db
+
+# 生成报告（运行产物，不提交）
+reports/

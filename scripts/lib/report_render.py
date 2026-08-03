@@ -8,6 +8,8 @@
 """
 from __future__ import annotations
 
+from html import escape
+
 import pandas as pd
 
 from trend_signals import to_weekly, _ma, FAST_WEEKS, SLOW_WEEKS
@@ -41,7 +43,7 @@ LEVEL_STYLE = {
 
 
 def _esc(s) -> str:
-    return str(s).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    return escape(str(s), quote=True)
 
 
 # ---------------------------- 净值曲线 SVG（带 hover） ----------------------------
@@ -224,18 +226,16 @@ def _sector_block(sector: dict | None) -> str:
 
 def _sector_news_block(news: dict | None) -> str:
     """板块消息面卡片（利好/利空双栏 + 总结）。无消息返回空串。"""
-    if not news or not (news.get("bullish") or news.get("bearish")):
+    if not news:
+        return ""
+    has_evidence = bool(news.get("bullish") or news.get("bearish") or news.get("sources"))
+    if not has_evidence and news.get("evidence_status") != "unavailable":
         return ""
     bull = "".join(f"<li>{_esc(b)}</li>" for b in (news.get("bullish") or []))
     bear = "".join(f"<li>{_esc(b)}</li>" for b in (news.get("bearish") or []))
-    summary = ""
-    if news.get("summary"):
-        summary = (f'<div style="margin-top:12px;padding:12px;background:var(--surface2);'
-                   f'border-left:3px solid {C["accent"]};border-radius:6px;font-size:13px;line-height:1.6">'
-                   f'💡 {_esc(news["summary"])}</div>')
-    return f'''
-<div class="card">
-  <div class="section-title">📰 板块消息面（{_esc(news.get('sector', '板块'))} · 截至 {_esc(news.get('as_of', ''))}）</div>
+    evidence_grid = ""
+    if news.get("bullish") or news.get("bearish"):
+        evidence_grid = f'''
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
     <div style="background:var(--surface2);border-radius:8px;padding:12px;border-top:3px solid {C['good']}">
       <div style="color:{C['good']};font-weight:600;margin-bottom:6px">🔼 利好</div>
@@ -245,7 +245,29 @@ def _sector_news_block(news: dict | None) -> str:
       <div style="color:{C['bad']};font-weight:600;margin-bottom:6px">🔽 利空</div>
       <ul style="margin:0;padding-left:18px;font-size:12px;line-height:1.7">{bear}</ul>
     </div>
-  </div>
+  </div>'''
+    sources = ""
+    if news.get("sources"):
+        items = "".join(
+            f'<li><a href="{_esc(source["url"])}" target="_blank" rel="noopener noreferrer" '
+            f'style="color:{C["accent"]}">{_esc(source["title"])}</a> · '
+            f'{_esc(source["date"])} · {_esc(source["stance"])}<br>'
+            f'<span style="color:var(--muted)">{_esc(source["summary"])}</span></li>'
+            for source in news["sources"]
+        )
+        sources = (f'<div style="margin-top:12px"><div style="font-size:12px;font-weight:600;'
+                   f'margin-bottom:6px">来源</div><ul style="margin:0;padding-left:18px;'
+                   f'font-size:12px;line-height:1.7">{items}</ul></div>')
+    summary = ""
+    if news.get("summary"):
+        summary = (f'<div style="margin-top:12px;padding:12px;background:var(--surface2);'
+                   f'border-left:3px solid {C["accent"]};border-radius:6px;font-size:13px;line-height:1.6">'
+                   f'💡 {_esc(news["summary"])}</div>')
+    return f'''
+<div class="card">
+  <div class="section-title">📰 板块消息面（{_esc(news.get('sector', '板块'))} · 截至 {_esc(news.get('as_of', ''))}）</div>
+  {evidence_grid}
+  {sources}
   {summary}
 </div>'''
 

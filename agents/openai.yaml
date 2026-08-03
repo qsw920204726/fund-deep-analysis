@@ -1,0 +1,4 @@
+interface:
+  display_name: "基金深度分析"
+  short_description: "深度分析场外基金趋势、风险指标、板块共振与右侧交易位置"
+  default_prompt: "Use $fund-deep-analysis to deeply analyze fund 161725."

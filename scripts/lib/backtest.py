@@ -13,7 +13,7 @@ import pandas as pd
 
 from trend_signals import to_weekly, _ma, _swing_lows, FAST_WEEKS, SLOW_WEEKS
 
-TRAILING_STOP = 0.10
+TRAILING_STOP = 0.12
 
 
 def _compound(rets: list[float]) -> float:

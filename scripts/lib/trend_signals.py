@@ -113,17 +113,30 @@ def higher_lows(weekly: pd.DataFrame, lookback: int = 30) -> dict:
 
 
 def breakout(nav: pd.DataFrame, window: int = 60) -> dict:
-    """日线辅助：是否突破近 window 日高点（排除当日）。"""
+    """日线辅助：是否突破近 window 日高点（排除当日）。场内 ETF 额外检测放量。"""
     price = nav["unit_nav"].dropna()
     w = min(window, len(price) - 1)
     if w < 5:
-        return {"breakout": False, "recent_high": None, "pct_to_high": None}
+        return {"breakout": False, "recent_high": None, "pct_to_high": None, "volume_surge": None}
     recent_high = price.iloc[-w - 1 : -1].max()
     last = price.iloc[-1]
+    is_break = bool(last > recent_high)
+
+    # 放量确认（仅场内 ETF 有 volume 字段）：当日量 / 近 20 日均量
+    vol_surge = None
+    if "volume" in nav.columns:
+        vol = nav["volume"].dropna()
+        if len(vol) >= 20:
+            avg_vol_20 = vol.iloc[-21:-1].mean()
+            last_vol = vol.iloc[-1]
+            if avg_vol_20 and avg_vol_20 > 0:
+                vol_surge = round(float(last_vol / avg_vol_20), 2)
+
     return {
-        "breakout": bool(last > recent_high),
+        "breakout": is_break,
         "recent_high": round(float(recent_high), 4),
         "pct_to_high": round(float(last / recent_high - 1) * 100, 2),
+        "volume_surge": vol_surge,  # >1.5 视为放量突破；None=场外基金无量
     }
 
 
@@ -135,6 +148,8 @@ def key_levels(nav: pd.DataFrame, weekly: pd.DataFrame) -> dict:
     price_w = weekly["unit_nav"]
     ma_fast = _ma(price_w, FAST_WEEKS)
     ma_slow = _ma(price_w, SLOW_WEEKS)
+    ma5d = price_d.rolling(5, min_periods=5).mean()
+    ma10d = price_d.rolling(10, min_periods=10).mean()
 
     # 近 26 周（半年）周线 swing low 作为止损参考前低
     recent_w = price_w.iloc[-26:].reset_index(drop=True)
@@ -147,6 +162,8 @@ def key_levels(nav: pd.DataFrame, weekly: pd.DataFrame) -> dict:
 
     return {
         "current": round(float(price_d.iloc[-1]), 4),
+        "ma5d": round(float(ma5d.iloc[-1]), 4) if pd.notna(ma5d.iloc[-1]) else None,
+        "ma10d": round(float(ma10d.iloc[-1]), 4) if pd.notna(ma10d.iloc[-1]) else None,
         "ma20w": round(float(ma_fast.iloc[-1]), 4) if pd.notna(ma_fast.iloc[-1]) else None,
         "ma60w": round(float(ma_slow.iloc[-1]), 4) if pd.notna(ma_slow.iloc[-1]) else None,
         "recent_swing_low": recent_swing_low,
