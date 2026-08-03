@@ -66,24 +66,40 @@ def _build_levels(regime: str, struct: dict, breakout: dict, lv: dict,
         a_status, a_price = "不建议", None
         a_reason = f"趋势为「{regime}」、无上升结构，加仓 = 接飞刀 / 摊低成本，违反右侧纪律。"
 
+    # ---------- 止盈/止损位（跌破型触发，检测是否已触发）----------
+    tp1_price = min(ma5d, ma10d) if (ma5d and ma10d) else round(current * 0.97, 4)
+    tp2_price = ma20w
+    stop_price = swing_low
+
+    def _triggered(price):
+        """跌破型位：当前净值已 ≤ 该位 → 信号已触发。"""
+        return price is not None and current <= price
+
+    def _exit_status(price):
+        return "⚠️ 已触发" if _triggered(price) else "若持有·触发即撤"
+
+    def _exit_reason(base, price):
+        if _triggered(price):
+            return base + f" 当前净值 {current} 已跌破该位，信号已触发。"
+        return base
+
     return [
         {"key": "entry", "icon": "🏗️", "label": "建仓", "status": e_status, "price": e_price,
          "cut": "底仓 40%", "reason": e_reason},
         {"key": "add", "icon": "➕", "label": "加仓", "status": a_status, "price": a_price,
          "cut": "金字塔 35→25%", "reason": a_reason},
-        {"key": "tp1", "icon": "①", "label": "止盈", "status": "若持有·触发即撤",
-         "price": min(ma5d, ma10d) if (ma5d and ma10d) else round(current * 0.97, 4),
-         "cut": "减 30%",
-         "reason": f"跌破 MA5d({ma5d})/MA10d({ma10d}) 说明短线走弱，先减 30% 锁利润。"},
-        {"key": "tp2", "icon": "②", "label": "止盈", "status": "若持有·触发即撤",
-         "price": ma20w, "cut": "减 40%",
-         "reason": f"跌破 MA20({ma20w}) + 死叉，中期趋势走弱，再减 40%。"},
-        {"key": "trailing", "icon": "🛑", "label": "移动止盈", "status": "若持有·触发即撤",
+        {"key": "tp1", "icon": "①", "label": "止盈", "status": _exit_status(tp1_price),
+         "price": tp1_price, "cut": "减 30%",
+         "reason": _exit_reason(f"跌破 MA5d({ma5d})/MA10d({ma10d}) 说明短线走弱，先减 30% 锁利润。", tp1_price)},
+        {"key": "tp2", "icon": "②", "label": "止盈", "status": _exit_status(tp2_price),
+         "price": tp2_price, "cut": "减 40%",
+         "reason": _exit_reason(f"跌破 MA20({ma20w}) + 死叉，中期趋势走弱，再减 40%。", tp2_price)},
+        {"key": "trailing", "icon": "🛑", "label": "移动止盈", "status": _exit_status(trailing),
          "price": trailing, "cut": "清仓",
-         "reason": f"从阶段高点 {stage_high} 回撤 12%（至 {trailing}）触发，满仓型保护利润、让利润奔跑。"},
-        {"key": "stop", "icon": "✕", "label": "止损", "status": "若持有·触发即撤",
-         "price": swing_low, "cut": "清仓",
-         "reason": f"跌破前低 {swing_low} → 更低低点、下跌结构延续，右侧纪律坚决清仓，不抱侥幸。"},
+         "reason": _exit_reason(f"从阶段高点 {stage_high} 回撤 12%（至 {trailing}）触发，满仓型保护利润、让利润奔跑。", trailing)},
+        {"key": "stop", "icon": "✕", "label": "止损", "status": _exit_status(stop_price),
+         "price": stop_price, "cut": "清仓",
+         "reason": _exit_reason(f"跌破前低 {swing_low} → 更低低点、下跌结构延续，右侧纪律坚决清仓，不抱侥幸。", stop_price)},
     ]
 
 

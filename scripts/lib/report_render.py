@@ -150,7 +150,8 @@ def _nav_chart_svg(weekly: pd.DataFrame, signals: dict, weeks: int = 156) -> str
 def _level_card(level: dict) -> str:
     status = level.get("status", "")
     color = {"建议": C["good"], "可轻仓试探": C["good"], "暂不建议": C["warn"],
-             "不建议": C["bad"], "若持有·触发即撤": C["muted"]}.get(status, C["accent"])
+             "不建议": C["bad"], "若持有·触发即撤": C["muted"],
+             "⚠️ 已触发": C["bad"]}.get(status, C["accent"])
     price_txt = f"{level['price']}" if level.get("price") is not None else "—"
     return f'''
     <div class="level-card" style="border-color:{color}33">
