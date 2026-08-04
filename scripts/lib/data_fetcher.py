@@ -42,25 +42,33 @@ _ETF_COL_MAP = {
     "成交额": "amount", "涨跌幅": "daily_return",
 }
 
+_ETF_SPOT_CACHE: pd.DataFrame | None = None
 _ETF_CODE_CACHE: set[str] | None = None
 
 
-def is_etf(symbol: str) -> bool:
-    """判断代码是否为场内 ETF（fund_etf_spot_em 代码集合，进程内缓存）。"""
+def _load_etf_spot() -> pd.DataFrame:
+    """拉取全市场 ETF 实时行情快照（fund_etf_spot_em），进程内缓存。"""
     import time
-    global _ETF_CODE_CACHE
-    if _ETF_CODE_CACHE is None:
+    global _ETF_SPOT_CACHE, _ETF_CODE_CACHE
+    if _ETF_SPOT_CACHE is None:
         for attempt in range(3):
             try:
-                spot = ak.fund_etf_spot_em()
-                code_col = next((c for c in spot.columns if "代码" in str(c)), None)
-                _ETF_CODE_CACHE = set(spot[code_col].astype(str).str.strip()) if code_col else set()
+                _ETF_SPOT_CACHE = ak.fund_etf_spot_em()
+                code_col = next((c for c in _ETF_SPOT_CACHE.columns if "代码" in str(c)), None)
+                _ETF_CODE_CACHE = set(_ETF_SPOT_CACHE[code_col].astype(str).str.strip()) if code_col else set()
                 break
             except Exception:
                 if attempt < 2:
                     time.sleep(3)
                 else:
+                    _ETF_SPOT_CACHE = pd.DataFrame()
                     _ETF_CODE_CACHE = set()
+    return _ETF_SPOT_CACHE
+
+
+def is_etf(symbol: str) -> bool:
+    """判断代码是否为场内 ETF（fund_etf_spot_em 代码集合，进程内缓存）。"""
+    _load_etf_spot()
     return symbol in _ETF_CODE_CACHE
 
 
@@ -142,6 +150,35 @@ def _fetch_etf_nav(symbol: str) -> pd.DataFrame:
     # 涨跌幅：用收盘价 pct_change 计算（新浪源无涨跌幅字段）
     df["daily_return"] = df["unit_nav"].pct_change() * 100
     df["accum_nav"] = None  # ETF 无累计净值概念
+
+    # ---- 用实时行情快照补充当天最新数据（确保拿到今日收盘价）----
+    # 新浪历史源当天数据可能延迟更新；fund_etf_spot_em 的「数据日期/最新价」
+    # 在收盘后即可反映当日收盘价，盘中则反映实时价。若 spot 日期晚于历史最新
+    # 日期，追加一行，保证分析始终基于最新盘面。
+    try:
+        spot = _load_etf_spot()
+        code_col = next((c for c in spot.columns if "代码" in str(c)), None)
+        if code_col is not None:
+            row = spot[spot[code_col].astype(str).str.strip() == symbol]
+            if len(row):
+                r = row.iloc[0]
+                spot_date = pd.to_datetime(r.get("数据日期"), errors="coerce")
+                last_date = df["date"].iloc[-1] if len(df) else None
+                if spot_date is not None and (last_date is None or spot_date > last_date):
+                    spot_price = pd.to_numeric(r.get("最新价"), errors="coerce")
+                    spot_vol = pd.to_numeric(r.get("成交量"), errors="coerce")
+                    new_row = pd.DataFrame([{
+                        "date": spot_date,
+                        "unit_nav": spot_price,
+                        "volume": spot_vol if pd.notna(spot_vol) else None,
+                        "accum_nav": None,
+                    }])
+                    df = pd.concat([df, new_row], ignore_index=True)
+                    df = df.sort_values("date").reset_index(drop=True)
+                    df["daily_return"] = df["unit_nav"].pct_change() * 100
+    except Exception:
+        pass  # spot 补充失败不影响历史数据
+
     return df
 
 
