@@ -1,8 +1,15 @@
 """sector_exposure.py — 基金主板块识别 + 板块暴露
 
-从基金名称 + 重仓股名称识别主板块，映射到可拉取的板块指数。
+从基金名称 + 重仓股名称 + 证监会行业配置识别主板块，映射到可拉取的板块指数。
 不依赖 push2.eastmoney.com 的个股行业接口（该域名在本环境受限），
-改用名称/重仓股关键词匹配 —— 对指数基金和行业集中型基金准确率高。
+改用名称/重仓股/行业配置关键词匹配 —— 对指数基金和行业集中型基金准确率高。
+
+v0.5 修复：
+  1. 新增 软件/传媒/通信/电子 板块（指数代码已用 akshare 实测：
+     软件→sz399363 国证算力（软件/算力代理）、传媒→sz399397 国证文化、
+     通信→sz399389 国证通信、电子→sz399811 CSSW电子）
+  2. 新增阶段④：证监会行业配置兜底（前三大行业占比>=40% 时按行业名映射板块），
+     解决"名称/重仓无关键词但行业高度集中"的基金（如软件ETF嘉实 86% 软件服务）
 
 板块指数走新浪源 stock_zh_index_daily（见 sector_resonance.py）。
 """
@@ -27,6 +34,10 @@ SECTOR_INDEX_MAP: dict[str, list[str]] = {
     "有色金属": ["sh000819"],         # 有色金属
     "房地产": ["sz399393"],          # 国证房地产
     "电力": ["sz931559"],            # 中证电力
+    "软件": ["sz399363"],            # 国证算力（软件/算力代理）✅2026-08 实测新鲜
+    "传媒": ["sz399397"],            # 国证文化（传媒代理）✅实测
+    "通信": ["sz399389"],            # 国证通信 ✅实测
+    "电子": ["sz399811"],            # CSSW电子 ✅实测
 }
 
 # 宽基标识 → (中文名, 新浪源指数 symbol)。匹配时按 key 长度降序，避免"中证500"误匹配"中证A500"。
@@ -47,7 +58,7 @@ BROAD_BASE_INDEX: dict[str, tuple[str, str]] = {
     "中证红利": ("中证红利", "sh000922"),
 }
 
-# 关键词 → 板块（顺序敏感：先具体后宽泛，避免"新能源"被"消费"抢先）
+# 关键词 → 板块（顺序敏感：先具体后宽泛）
 KEYWORD_TO_SECTOR: list[tuple[str, list[str]]] = [
     ("白酒", ["白酒", "酒"]),
     ("半导体", ["半导体", "芯片"]),
@@ -63,15 +74,59 @@ KEYWORD_TO_SECTOR: list[tuple[str, list[str]]] = [
     ("电力", ["电力"]),
     ("食品饮料", ["食品", "饮料"]),
     ("主要消费", ["消费"]),
+    ("软件", ["软件", "计算机", "信息技术", "信创", "云计算", "大数据", "算力", "互联网服务"]),
+    ("传媒", ["传媒", "游戏", "影视", "动漫", "出版"]),
+    ("通信", ["通信", "5G", "运营商", "光模块"]),
+    ("电子", ["电子", "消费电子", "面板", "PCB"]),
+]
+
+# 证监会行业配置（大类/门类）→ 板块兜底
+INDUSTRY_TO_SECTOR: list[tuple[str, str]] = [
+    ("软件和信息技术服务业", "软件"),
+    ("互联网和相关服务", "软件"),
+    ("信息技术", "软件"),
+    ("计算机", "软件"),
+    ("文化、体育和娱乐业", "传媒"),
+    ("电信、广播电视和卫星传输服务", "通信"),
+    ("通信", "通信"),
+    ("计算机、通信和其他电子设备制造业", "电子"),
+    ("电子", "电子"),
+    ("医药", "医药"),
+    ("食品", "食品饮料"),
+    ("饮料", "食品饮料"),
+    ("酒", "白酒"),
+    ("银行", "银行"),
+    ("资本市场服务", "券商"),
+    ("证券", "券商"),
+    ("汽车", "新能源汽车"),
+    ("电力", "电力"),
+    ("煤炭", "煤炭"),
+    ("有色金属", "有色金属"),
+    ("房地产", "房地产"),
+    ("国防", "军工"),
+    ("铁路、船舶、航空航天", "军工"),
+    ("电气机械", "光伏"),
+    ("光伏", "光伏"),
 ]
 
 
-def identify_sector(fund_name: str, holdings: pd.DataFrame | None) -> dict:
-    """识别主板块（四阶段）。
+def _match_keywords(text: str, sector_keywords: list[tuple[str, list[str]]]) -> tuple[str | None, str | None]:
+    """按关键词顺序匹配，返回 (板块, 命中词)。"""
+    for sector, keywords in sector_keywords:
+        for kw in keywords:
+            if kw in text:
+                return sector, kw
+    return None, None
+
+
+def identify_sector(fund_name: str, holdings: pd.DataFrame | None,
+                    industry_top3: list | None = None) -> dict:
+    """识别主板块（五阶段）。
 
     ① 名称含宽基标识（沪深300/中证500/创业板等）→ 宽基类别 + 跟踪指数
     ② 名称含行业板块词（白酒/医药/银行…）→ 该板块
     ③ 前十大重仓 ≥4 只同一板块词 → 该板块（避免少数重仓误判）
+    ④ 证监会行业配置 Top1 占比 >=40% → 按行业名映射板块（v0.5 新增）
     其余 → 未识别（均衡/主动配置型）
     """
     name = (fund_name or "").replace("　", " ")
@@ -88,28 +143,44 @@ def identify_sector(fund_name: str, holdings: pd.DataFrame | None) -> dict:
                     "identification": f"宽基指数基金，跟踪{cn}（{sym}）",
                     "top_holdings": top_names[:60]}
     # ② 名称板块词
-    for sector, keywords in KEYWORD_TO_SECTOR:
-        for kw in keywords:
-            if kw in name:
-                return {"main_sector": sector, "matched_keyword": kw,
-                        "index_symbols": SECTOR_INDEX_MAP.get(sector, []),
-                        "identification": f"基金名称含「{kw}」",
-                        "top_holdings": top_names[:60]}
+    sector, kw = _match_keywords(name, KEYWORD_TO_SECTOR)
+    if sector:
+        return {"main_sector": sector, "matched_keyword": kw,
+                "index_symbols": SECTOR_INDEX_MAP.get(sector, []),
+                "identification": f"基金名称含「{kw}」",
+                "top_holdings": top_names[:60]}
     # ③ 重仓股集中度（≥4 只同一板块才算，避免少数重仓误判）
     if top_names:
         top = holdings["股票名称"].astype(str).head(10).tolist()
-        for sector, keywords in KEYWORD_TO_SECTOR:
-            count = sum(1 for n in top if any(kw in n for kw in keywords))
-            if count >= 4:
-                return {"main_sector": sector, "matched_keyword": f"{count}只重仓",
-                        "index_symbols": SECTOR_INDEX_MAP.get(sector, []),
-                        "identification": f"前十大重仓 {count} 只属「{sector}」",
-                        "top_holdings": top_names[:60]}
-        return {"main_sector": None, "matched_keyword": None, "index_symbols": [],
-                "identification": "未识别（重仓分散，主动配置型/均衡）",
-                "top_holdings": top_names[:60]}
+        # 重仓场景需要计数（>=4 只同板块才算）
+        counts = {}
+        for sec, keywords in KEYWORD_TO_SECTOR:
+            c = sum(1 for n in top if any(k in n for k in keywords))
+            if c:
+                counts[sec] = counts.get(sec, 0) + c
+        best = max(counts.items(), key=lambda kv: kv[1]) if counts else (None, 0)
+        if best[0] and best[1] >= 4:
+            return {"main_sector": best[0], "matched_keyword": f"{best[1]}只重仓",
+                    "index_symbols": SECTOR_INDEX_MAP.get(best[0], []),
+                    "identification": f"前十大重仓 {best[1]} 只属「{best[0]}」",
+                    "top_holdings": top_names[:60]}
+    # ④ 行业配置兜底（v0.5）：Top1 行业占比 >=40% 且能映射
+    if industry_top3:
+        for ind_name, weight in industry_top3[:3]:
+            try:
+                weight = float(weight)
+            except Exception:
+                continue
+            if weight >= 40.0:
+                sector, kw = _match_keywords(str(ind_name), INDUSTRY_TO_SECTOR)
+                if sector:
+                    return {"main_sector": sector, "matched_keyword": kw,
+                            "index_symbols": SECTOR_INDEX_MAP.get(sector, []),
+                            "identification": f"证监会行业配置「{ind_name}」占 {weight:.1f}%（≥40%）",
+                            "top_holdings": top_names[:60]}
     return {"main_sector": None, "matched_keyword": None, "index_symbols": [],
-            "identification": "未识别（无重仓数据）", "top_holdings": ""}
+            "identification": "未识别（重仓分散，主动配置型/均衡）",
+            "top_holdings": top_names[:60]}
 
 
 def industry_snapshot(industry_alloc: pd.DataFrame | None) -> dict | None:

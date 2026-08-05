@@ -150,8 +150,9 @@ def _nav_chart_svg(weekly: pd.DataFrame, signals: dict, weeks: int = 156) -> str
 def _level_card(level: dict) -> str:
     status = level.get("status", "")
     color = {"建议": C["good"], "可轻仓试探": C["good"], "暂不建议": C["warn"],
-             "不建议": C["bad"], "若持有·触发即撤": C["muted"],
-             "⚠️ 已触发": C["bad"]}.get(status, C["accent"])
+             "不建议": C["bad"], "已持仓·不重复建仓": C["muted"],
+             "若持有·触发即撤": C["muted"], "⚠️ 已触发": C["bad"],
+             "—": C["muted"]}.get(status, C["accent"])
     price_txt = f"{level['price']}" if level.get("price") is not None else "—"
     return f'''
     <div class="level-card" style="border-color:{color}33">
@@ -280,14 +281,24 @@ def _backtest_block(bt: dict | None) -> str:
     wr = bt["win_rate"]
     tone_key = "bad" if wr < 40 else ("good" if wr >= 55 else None)
     verdict = "偏低" if wr < 40 else ("尚可" if wr < 55 else "较好")
+    bench_tiles = ""
+    if bt.get("benchmark_return_pct") is not None:
+        beat = bt["total_return_pct"] > bt["benchmark_return_pct"]
+        bench_tiles = (
+            _kpi_tile("同期买入持有", f"{bt['benchmark_return_pct']}%", "", "bad" if not beat else "good")
+            + _kpi_tile("策略最大回撤", f"{bt['strategy_max_drawdown_pct']}%", "", None)
+            + _kpi_tile("基准最大回撤", f"{bt['benchmark_max_drawdown_pct']}%", "", None)
+            + _kpi_tile("平均持仓", f"{bt['avg_hold_weeks']}周", "", None)
+        )
     return f'''
 <div class="card">
-  <div class="section-title">📉 历史回测（信号在此基金的历史表现）</div>
+  <div class="section-title">📉 历史回测（信号在此基金的历史表现 · 含手续费）</div>
   <div class="kpi-row">
     {_kpi_tile("交易笔数", bt['n_trades'], "", None)}
     {_kpi_tile("胜率", f"{wr}%", verdict, tone_key)}
     {_kpi_tile("平均单笔", f"{bt['avg_return_pct']}%", "", "bad" if bt['avg_return_pct'] < 0 else "good")}
     {_kpi_tile("累计", f"{bt['total_return_pct']}%", "", tone_key)}
+    {bench_tiles}
   </div>
   <div class="sub" style="margin-top:10px">单笔最大盈亏：+{bt['max_gain_pct']}% / {bt['max_loss_pct']}%</div>
   <div style="margin-top:10px;padding:10px;background:var(--surface2);border-left:3px solid {C['warn']};border-radius:6px;font-size:13px">⚠️ 历史胜率{verdict}——回测差 ≠ 不能做，但信号未经历史验证可靠，<b>别盲信单次作战卡</b>。</div>
@@ -323,7 +334,9 @@ def render_html(decision: dict, metrics: dict, signals: dict, nav: pd.DataFrame,
     lv = signals["levels"]
     regime = signals["trend"]["regime"]
     regime_color = {"上升": C["good"], "下降": C["bad"]}.get(regime, C["warn"])
-    action_color = C["bad"] if "不进场" in decision["action"] else (C["good"] if "加仓" in decision["action"] else C["warn"])
+    _act = decision["action"]
+    action_color = (C["bad"] if any(k in _act for k in ("不进场", "观望", "假突破", "不加仓", "等待"))
+                    else (C["good"] if any(k in _act for k in ("加仓", "建仓", "试探", "关注")) else C["warn"]))
 
     name_part = f" · {_esc(fund_name)}" if fund_name else ""
     deep = " ⚠️ 深度回撤" if decision.get("deep_drawdown") else ""
@@ -389,6 +402,7 @@ def render_html(decision: dict, metrics: dict, signals: dict, nav: pd.DataFrame,
     <div>
       <span class="chip" style="background:{regime_color}22;color:{regime_color}">趋势：{regime}</span>
       <span class="chip" style="background:var(--surface2);color:var(--muted)">{signals['trend']['alignment']}</span>
+      <span class="chip" style="background:var(--surface2);color:var(--muted)">{'🧍 空仓视角' if decision.get('view','empty')=='empty' else '💼 持仓视角'}</span>
       <span class="chip" style="background:{C['warn']}22;color:{C['warn']}">{deep.strip()}</span>
     </div>
   </div>

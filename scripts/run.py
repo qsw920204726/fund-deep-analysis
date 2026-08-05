@@ -1,4 +1,4 @@
-"""run.py — 基金右侧交易分析 · 两段式入口（v0.4 含板块联动 + 消息面 + 宽基）
+"""run.py — 基金右侧交易分析 · 两段式入口（v0.5：持仓状态机 + 量能/板块门控 + 双日确认 + 基准回测）
 
 用法：
   python scripts/run.py 161725              # 深度模式 stage1，等待 Codex 介入
@@ -120,13 +120,14 @@ def _collect_sector(code: str, signals: dict) -> dict:
                 industry = fetch_industry_allocation(code, hy)
             except Exception:
                 pass
-        sector_id = identify_sector(name, holdings)
+        snap = industry_snapshot(industry)
+        sector_id = identify_sector(name, holdings, industry_top3=(snap or {}).get("top3"))
         sector = compute_resonance(signals, sector_id["index_symbols"], code)
         sector["sector_id"] = sector_id
         sector["fund_name"] = name
         sector["fund_type"] = ftype
         sector["holdings_year"] = hy
-        sector["industry_snapshot"] = industry_snapshot(industry)
+        sector["industry_snapshot"] = snap
     except Exception as e:
         sector = {"available": False, "light": "⚪", "label": f"板块分析失败: {e}",
                   "advice": "", "fund_code": code}
@@ -136,13 +137,15 @@ def _collect_sector(code: str, signals: dict) -> dict:
 
 # ---------------------------- Stage 1 ----------------------------
 
-def stage1(code: str) -> dict:
+def stage1(code: str, state: dict | None = None) -> dict:
     cache = cache_dir(code)
 
     progress(8, f"采集 {code} 历史净值（天天基金）…")
     nav = fetch_nav(code, period="全部")
-    if len(nav) < 60:
-        raise ValueError(f"{code} 净值数据不足（仅 {len(nav)} 条），至少需要 60 个交易日")
+    if len(nav) < 150:
+        raise ValueError(
+            f"{code} 净值数据不足（仅 {len(nav)} 条），至少需要 150 个交易日"
+            f"（20 周均线需约 100 个交易日，60 周需约 300 个交易日；当前仅够 {len(nav) // 5} 周左右）")
     nav_records = nav.assign(date=nav["date"].dt.strftime("%Y-%m-%d")).to_dict("records")
     save_json(cache / "raw_data.json", {"fund_code": code, "rows": len(nav), "nav": nav_records})
     nav.to_csv(cache / "net_value.csv", index=False, encoding="utf-8-sig")
@@ -160,7 +163,7 @@ def stage1(code: str) -> dict:
     sector = _collect_sector(code, signals)
 
     progress(82, "生成右侧骨架决策（建仓/加仓/止盈/止损）…")
-    decision = decide(metrics, signals, sector)
+    decision = decide(metrics, signals, sector, state=state)
 
     progress(92, "回测右侧信号历史表现…")
     bt = backtest(nav)
@@ -305,6 +308,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--stage1", action="store_true", help="只运行深度模式 stage1")
     parser.add_argument("--stage2", action="store_true", help="只运行深度模式 stage2")
     parser.add_argument("--runtime-dir", default=None, help="缓存和报告的可写根目录")
+    parser.add_argument("--state", choices=["empty", "holding"], default="empty",
+                        help="视角：empty=空仓（默认） / holding=持仓（需 --entry 成本价，可选 --peak 入场后峰值）")
+    parser.add_argument("--entry", type=float, default=None, help="持仓成本净值（--state holding 时必填）")
+    parser.add_argument("--peak", type=float, default=None, help="入场后最高净值（--state holding 可选，默认=entry）")
     parser.add_argument("--open", dest="open_report", action="store_true", help="生成后打开 HTML 报告")
     parser.add_argument("--no-open", dest="open_report", action="store_false", help=argparse.SUPPRESS)
     parser.set_defaults(open_report=False)
@@ -315,8 +322,12 @@ def main(argv: list[str] | None = None) -> None:
     args = build_parser().parse_args(argv)
     configure_runtime_dir(args.runtime_dir or default_runtime_dir())
 
+    state = {"entry": args.entry, "peak": args.peak} if args.state == "holding" else None
+    if args.state == "holding" and args.entry is None:
+        parser.error("--state holding 必须提供 --entry 成本净值")
+
     if args.stage1:
-        stage1(args.code)
+        stage1(args.code, state=state)
         print(f"\n⏸️  stage1 完成。Agent 介入：读 .cache/{args.code}/rightside.json + sector.json，"
               f"检索板块消息面，写 agent_analysis.json，再运行 --stage2")
         return
@@ -330,11 +341,11 @@ def main(argv: list[str] | None = None) -> None:
         return
 
     if not args.quick:
-        stage1(args.code)
+        stage1(args.code, state=state)
         print(f"\n⏸️  stage1 完成。深度模式：写 agent_analysis.json 后使用同一 Python 运行 `run.py {args.code} --stage2`。\n")
         return
 
-    s1 = stage1(args.code)
+    s1 = stage1(args.code, state=state)
     md_out, html_out = stage2(args.code, s1, require_agent=False)
     print(f"\n✅ 作战卡：{md_out}\n✅ HTML 报告：{html_out}")
     if args.open_report:

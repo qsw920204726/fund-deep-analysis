@@ -100,9 +100,14 @@
 ```json
 {
   "fund_code": "161725",
+  "view": "empty",                // v0.5：empty=空仓视角 / holding=持仓视角
   "action": "观望 · 不进场",
   "position": "0%",
   "rationale": "...",
+  "volume_note": "",              // v0.5：量能门控说明
+  "sector_note": "",              // v0.5：板块门控说明
+  "fast_note": "",                // v0.5：快速右侧说明
+  "state": null,                  // v0.5：持仓视角时的 {"entry":..,"peak":..}
   "levels": [
     {"key": "entry", "icon": "🏗️", "label": "建仓", "status": "不建议",
      "price": null, "cut": "底仓 40%",
@@ -110,20 +115,24 @@
     {"key": "add", "icon": "➕", "label": "加仓", "status": "不建议",
      "price": null, "cut": "金字塔 35→25%", "reason": "趋势为「下降」、无上升结构，加仓 = 接飞刀..."},
     {"key": "tp1", "icon": "①", "label": "止盈", "status": "若持有·触发即撤",
-     "price": 0.5233, "cut": "减 30%", "reason": "跌破近端支撑（约 0.5233）说明短线走弱，先减 30% 锁利润。"},
+     "price": 0.7142, "cut": "减 30%", "reason": "跌破 MA5d(0.7142)/MA10d(0.6876) 较高者说明短线走弱，先减 30% 锁利润。连续 2 日收盘低于该位才触发。"},
     {"key": "tp2", "icon": "②", "label": "止盈", "status": "若持有·触发即撤",
-     "price": 0.5855, "cut": "减 40%", "reason": "跌破 MA20(0.5855) + 死叉，中期趋势走弱，再减 40%。"},
-    {"key": "trailing", "icon": "🛑", "label": "移动止盈", "status": "若持有·触发即撤",
-     "price": 0.7292, "cut": "清仓", "reason": "从阶段高点 0.8286 回撤 12%（至 0.7292）触发..."},
+     "price": 0.7459, "cut": "减 40%", "reason": "跌破 MA20(0.7459) + 死叉，中期趋势走弱，再减 40%。"},
+    {"key": "tp3", "icon": "③", "label": "止盈", "status": "⚠️ 已触发",
+     "price": 0.8379, "cut": "清仓", "reason": "跌破 MA60(0.8379) + 空头排列，长期趋势破坏，清仓离场。"},
+    {"key": "trailing", "icon": "🛑", "label": "移动止盈", "status": "参考·空仓视角",
+     "price": 0.8897, "cut": "清仓", "reason": "空仓视角参考：自阶段高点 1.011 回撤 12%（至 0.8897）。实际持仓请用 --state holding 按入场后峰值跟踪。"},
     {"key": "stop", "icon": "✕", "label": "止损", "status": "若持有·触发即撤",
-     "price": 0.5032, "cut": "清仓", "reason": "跌破前低 0.5032 → 更低低点、下跌结构延续，坚决清仓。"}
+     "price": 0.643, "cut": "清仓", "reason": "跌破双轨止损位 0.643（已确认前低 0.751 / 最新可见低点 0.643 取低者，含 1% 缓冲）→ 更低低点、下跌结构延续，坚决清仓。"}
   ],
   "sector_signal": "🔴 同步下跌（板块 下降）— 基金 + 板块同跌，纪律观望",
   "deep_drawdown": true,
   "trailing_stop_pct": 0.120
 }
 ```
-> `status` 取值：建议 / 可轻仓试探 / 暂不建议 / 不建议 / 若持有·触发即撤 / ⚠️ 已触发（跌破型位当前净值已跌破该位）。每位都带 `reason`（引用具体净值/均线数字）。
+> `status` 取值：建议 / 可轻仓试探 / 暂不建议 / 不建议 / 已持仓·不重复建仓 / 参考·空仓视角 / 若持有·触发即撤 / ⚠️ 已触发。
+> v0.5：跌破型位（止盈/止损）需连续 2 日收盘确认，止损额外含 1% 缓冲；每位都带 `reason`（引用具体净值/均线数字）。
+> 回测新增：`benchmark_return_pct`（同期买入持有）、`strategy_max_drawdown_pct`、`benchmark_max_drawdown_pct`、`avg_hold_weeks`（含手续费）。
 
 ## agent_analysis.json（Codex 介入写，stage2 读）
 

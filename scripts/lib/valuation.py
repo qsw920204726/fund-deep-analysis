@@ -4,7 +4,7 @@
 判断便宜/合理/贵，防止技术面在估值高位接盘。
 
 ⚠️ 数据源限制：lg 仅覆盖宽基（沪深300/上证50/中证500/中证1000/深证100）。
-   行业指数（白酒/医药/银行…）lg 不支持，估值锚降级（建议人工查理杏仁/天天基金）。
+   行业指数（白酒/医药/银行…）lg 不支持，估值锚降级（建议人工查询理杏仁/天天基金）。
 """
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ def compute_valuation(main_sector: str | None, lookback_years: int = 5) -> dict:
     lg_name = LG_INDEX_MAP.get(main_sector)
     if not lg_name:
         return {"available": False,
-                "reason": f"{main_sector} 估值数据源未覆盖（lg 仅支持宽基），建议人工查理杏仁/天天基金"}
+                "reason": f"{main_sector} 估值数据源未覆盖（lg 仅支持宽基），建议人工查询理杏仁/天天基金"}
 
     try:
         import akshare as ak

@@ -11,6 +11,8 @@ description: Use when a user asks to analyze a Chinese fund (off-exchange OTC fu
 
 场外基金净值为日级 T+1；场内 ETF 有日K行情（前复权收盘价）及成交量，且 data_fetcher 会用 fund_etf_spot_em 实时快照补充当日收盘价，确保每次分析都拿到最新盘面。本 skill 只做日/周级中长线判断，不提供实时或日内交易建议。输出不是投资建议。
 
+引擎版本 v0.5：持仓状态机（空仓/持仓视角）、量能/板块门控、双日确认、双轨止损、移动止盈自入场后峰值跟踪。
+
 ## 工作流
 
 1. 从当前请求提取六位基金代码。缺失或格式错误时，只询问基金代码。
@@ -23,9 +25,14 @@ description: Use when a user asks to analyze a Chinese fund (off-exchange OTC fu
    <python> <skill-dir>/scripts/run.py <code> --stage1 --runtime-dir <runtime-dir>
    ```
 
-6. 读取 `<runtime-dir>/.cache/<code>/rightside.json`、`sector.json`、`metrics.json` 和 `signals.json`。数据少于 60 个交易日时停止；不得绕过数据门控。**数据时效校验**：检查 `metrics.json` 的 `latest_date` 是否为最近一个交易日（场内 ETF 当天收盘后即可拿到当日数据）；若日期明显滞后（如周一分析但数据仍停留在上周五），先重跑 stage1 再继续，不得用过期数据出结论。
+   若用户已持仓，追加持仓视角参数（移动止盈改为自入场后峰值动态跟踪）：
+   ```text
+   <python> <skill-dir>/scripts/run.py <code> --stage1 --state holding --entry <成本净值> [--peak <入场后峰值>] --runtime-dir <runtime-dir>
+   ```
+
+6. 读取 `<runtime-dir>/.cache/<code>/rightside.json`、`sector.json`、`metrics.json` 和 `signals.json`。数据少于 150 个交易日时停止（20 周均线需约 100 个交易日，60 周需约 300 日）；不得绕过数据门控。**数据时效校验**：检查 `metrics.json` 的 `latest_date` 是否为最近一个交易日（场内 ETF 当天收盘后即可拿到当日数据）；若日期明显滞后（如周一分析但数据仍停留在上周五），先重跑 stage1 再继续，不得用过期数据出结论。
 7. 用当前会话可用的网页搜索、浏览器或公共数据工具，检索主板块近 30-90 天的利好与利空。每条证据保留标题、日期、HTTP(S) URL、立场和摘要。优先使用监管披露、基金或指数官方资料、上市公司公告与可信财经媒体。
-8. 用结构化 JSON 序列化写入 `<runtime-dir>/.cache/<code>/agent_analysis.json`。定性结论必须引用脚本中的净值、均线、回撤、夏普或其他风险数字；所有买卖净值位必须来自 `rightside.json`。
+8. 用结构化 JSON 序列化写入 `<runtime-dir>/.cache/<code>/agent_analysis.json`。定性结论必须引用脚本中的净值、均线、回撤、夏普或其他风险数字；所有买卖净值位必须来自 `rightside.json`。注意 `rightside.json` 的 `view` 字段：空仓视角的移动止盈仅为 52 周高点参考；若用户已持仓，用 `--state holding --entry <成本>` 重跑以获取入场后峰值跟踪的退出位。
 9. 无法核验外部消息时，使用 `evidence_status: unavailable`、空的 `bullish`、`bearish` 和 `sources`，并在 `summary` 与最终回复中说明限制。不得声称消息已核验。
 10. 运行：
 
