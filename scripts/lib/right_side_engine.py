@@ -266,8 +266,11 @@ def decide(metrics: dict, signals: dict, sector: dict | None = None,
                 action, position = "持有 · 暂不加仓", f"{int(BASE_POSITION * 100)}%"
                 rationale = f"上升但低点结构待确认{sec_hint}。持有底仓，等结构确认再加仓。"
 
+    levels = _build_levels(regime, struct, breakout, fast, lv, sector, trailing, view)
+
     if view == "holding":
-        # 持仓视角：顶层动作改为持仓管理（建仓/加仓仅对空仓者有效）
+        # 持仓视角：顶层动作改为持仓管理（建仓/加仓仅对空仓者有效），
+        # 并把"按退出位执行"翻译成具体规则：跌破哪个位 → 执行什么动作
         if "观望" in action or "等待" in action:
             action = "持仓管理 · 按退出位执行"
         elif action.startswith("持有"):
@@ -275,8 +278,11 @@ def decide(metrics: dict, signals: dict, sector: dict | None = None,
         else:
             action = f"持仓管理 · {action}"
         position = "已持仓（按退出位执行）"
-
-    levels = _build_levels(regime, struct, breakout, fast, lv, sector, trailing, view)
+        exits = [l for l in levels
+                 if l["key"] in ("tp1", "tp2", "tp3", "trailing", "stop") and l.get("price") is not None]
+        rule = "；".join(f"{l['icon']}跌破 {l['price']} → {l['cut']}" for l in exits)
+        rationale = (rationale +
+                     f" 持仓执行规则：{rule}。跌破位需连续 2 日收盘确认，触发即执行，不猜不扛。")
 
     return {
         "fund_code": metrics.get("fund_code"),
