@@ -1,4 +1,4 @@
-"""report_render.py — 右侧作战卡 HTML 报告渲染器 v0.5.1
+"""report_render.py — 右侧作战卡 HTML 报告渲染器 v0.6
 
 把作战卡渲染成自包含的 Bloomberg 深色风格 HTML（单文件，无外部依赖，可手机分享）。
 
@@ -455,6 +455,194 @@ def _valuation_block(val: dict | None) -> str:
   <div style="margin-top:10px;padding:10px;background:var(--surface2);border-left:3px solid {color};border-radius:6px;font-size:13px">估值 <b style="color:{color}">{val['verdict']}</b>——分位高=贵警惕高位接盘，分位低=便宜右侧安全垫厚。</div>
 </div>'''
 
+# v0.6 外部工具链区块（由补丁脚本拼入 report_render.py，位于 _sector_block 之前）
+
+def _fmt_yi(v, nd: int = 2) -> str:
+    """元 → 亿（带符号）。"""
+    try:
+        f = float(v)
+    except (TypeError, ValueError):
+        return "—"
+    if f == 0:
+        return "0"
+    return f"{f / 1e8:+.{nd}f}亿"
+
+
+def _pct(v, nd: int = 1) -> str:
+    """比率 → 百分比字符串（比率小于 1 时视为小数）。"""
+    try:
+        f = float(v)
+    except (TypeError, ValueError):
+        return "—"
+    if abs(f) <= 1:
+        f = f * 100
+    return f"{f:+.1f}%"
+
+
+def _capital_flow_block(sector: dict | None) -> str:
+    """资金面验证卡片（a-stock-data）：板块资金流 + 重仓股资金流 + 龙虎榜 + 北向。"""
+    cf = (sector or {}).get("capital_flow") or {}
+    if not cf.get("available"):
+        err = cf.get("error") or "未启用 --enrich-flow"
+        return ('<div class="card"><div class="section-title">💧 资金面验证（外部工具链）</div>'
+                f'<div class="sub" style="padding:10px">未接入：{_esc(err)}</div></div>')
+    parts = []
+
+    sb = cf.get("sector_board") or {}
+    if sb.get("board"):
+        b = sb["board"]
+        tf = sb.get("today_flow") or {}
+        name = b.get("name", "—")
+        code = b.get("code", "")
+        rank = b.get("rank")
+        chg = b.get("change_pct")
+        rank_txt = f"主力净流入第 {rank} 名（全市场板块）" if rank else "主力净流入排名未获取"
+        tone = C["bad"] if (tf.get("main_net") or 0) < 0 else C["good"]
+        main_txt = _fmt_yi(tf.get("main_net")) if tf.get("main_net") is not None else "—"
+        flow_verdict = "主力净流出" if (tf.get("main_net") or 0) < 0 else "主力净流入"
+        detail = ""
+        if tf:
+            rows = [
+                ("超大单", _fmt_yi(tf.get("super_large_net")),
+                 "bad" if (tf.get("super_large_net") or 0) < 0 else "good"),
+                ("大单", _fmt_yi(tf.get("large_net")),
+                 "bad" if (tf.get("large_net") or 0) < 0 else "good"),
+                ("中单", _fmt_yi(tf.get("medium_net")),
+                 "bad" if (tf.get("medium_net") or 0) < 0 else "good"),
+                ("小单", _fmt_yi(tf.get("small_net")),
+                 "bad" if (tf.get("small_net") or 0) < 0 else "good"),
+            ]
+            detail = ('<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 18px;margin-top:8px">'
+                      + "".join(
+                          f'<div style="display:flex;justify-content:space-between;font-size:13px">'
+                          f'<span style="color:var(--muted)">{lbl}</span>'
+                          f'<b style="color:{C[tone2]}">{v}</b></div>'
+                          for lbl, v, tone2 in rows) + '</div>')
+        parts.append(
+            '<div style="padding:12px;background:var(--surface2);border-left:3px solid '
+            f'{tone};border-radius:6px;margin-bottom:12px">'
+            f'<div style="font-size:15px;font-weight:700;color:var(--text)">{_esc(name)} '
+            f'<span style="color:var(--muted);font-size:12px;font-weight:400">{_esc(code)} · {_esc(rank_txt)}</span></div>'
+            f'<div style="margin-top:6px;font-size:14px">当日主力资金 <b style="color:{tone};font-size:17px">{main_txt}</b>'
+            f'（{flow_verdict}）· 板块涨跌 <b style="color:{C["good"] if (chg or 0) >= 0 else C["bad"]}">{_pct(chg)}</b></div>'
+            f'{detail}'
+            '<div class="sub" style="margin-top:6px">💰 游资视角：主力（大单+超大单）是方向资金；若主力大幅流出而小单流入，'
+            '通常=机构/游资撤退、散户接盘，右侧买入要更谨慎。</div></div>')
+
+    bf = cf.get("board_flow") or {}
+    if bf.get("industry") or bf.get("concept"):
+        ctx = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">'
+        for bt, label in (("industry", "行业板块"), ("concept", "概念板块")):
+            per = bf.get(bt, {}).get("today", {})
+            top5 = per.get("top5") or []
+            matched = per.get("matched") or []
+            rows = "".join(
+                f'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0">'
+                f'<span>{_esc(r.get("name", ""))}</span>'
+                f'<b style="color:{C["good"] if (r.get("main_net") or 0) >= 0 else C["bad"]}">{_fmt_yi(r.get("main_net"))}</b></div>'
+                for r in top5[:5])
+            mrow = ""
+            if matched:
+                mrow = ('<div class="sub" style="margin-top:4px">本基金板块命中：'
+                        + "、".join(f'{_esc(r.get("name", ""))}({_fmt_yi(r.get("main_net"))})'
+                                    for r in matched[:4]) + '</div>')
+            ctx += (f'<div style="padding:8px;background:var(--surface2);border-radius:6px">'
+                    f'<div style="font-size:13px;color:var(--muted);margin-bottom:4px">{label} · 今日主力净流入 TOP5</div>'
+                    f'{rows}{mrow}</div>')
+        ctx += '</div>'
+        parts.append(f'<div style="margin-bottom:12px">{ctx}</div>')
+
+    sf = cf.get("stock_flow") or []
+    holds = cf.get("holdings") or []
+    if sf:
+        rows = "".join(
+            f'<div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0;'
+            f'border-bottom:1px solid var(--border)">'
+            f'<span>{_esc(h.get("name", ""))} <span style="color:var(--muted)">{_esc(h.get("code", ""))}'
+            f' · 占净值{h.get("weight")}%</span></span>'
+            f'<b style="color:{C["good"] if (h.get("latest", {}).get("main_net") or 0) >= 0 else C["bad"]}">'
+            f'{_fmt_yi(h.get("latest", {}).get("main_net"))}</b></div>'
+            for h in sf if h.get("latest"))
+        parts.append('<div style="margin-bottom:12px">'
+                     '<div style="font-size:13px;color:var(--muted);margin-bottom:4px">重仓股 · 主力资金（近1日）</div>'
+                     f'{rows}</div>')
+    elif holds:
+        parts.append('<div class="sub" style="margin-bottom:12px">重仓股资金流接口当前不可达'
+                     '（东财 push2 实时域名被风控），已自动降级为板块级资金流。</div>')
+
+    dt = cf.get("dragon_tiger") or {}
+    if isinstance(dt, dict) and (dt.get("matched") or dt.get("holdings")):
+        rows = dt.get("matched") or dt.get("holdings") or []
+        txt = "、".join(f'{_esc(r.get("name", ""))}(净买{_fmt_yi(r.get("net_buy") or r.get("净买额") or 0)})'
+                        for r in rows[:6])
+        parts.append(f'<div class="sub" style="margin-bottom:12px">📋 龙虎榜：{_esc(txt)}</div>')
+
+    nb = cf.get("northbound") or {}
+    latest = nb.get("latest") if isinstance(nb, dict) else None
+    if isinstance(latest, dict) and latest.get("hgt_yi") is not None:
+        hgt = latest.get("hgt_yi")
+        sgt = latest.get("sgt_yi")
+        hgt_txt = f'{hgt:+.2f}亿' if isinstance(hgt, (int, float)) and hgt == hgt else "—"
+        sgt_txt = f'{sgt:+.2f}亿' if isinstance(sgt, (int, float)) and sgt == sgt else "—"
+        parts.append(f'<div class="sub" style="margin-bottom:12px">🧭 北向资金（{_esc(str(latest.get("time", "")))}）：'
+                     f'沪股通 {hgt_txt} · 深股通 {sgt_txt}</div>')
+
+    gh = cf.get("global_stock_hint") or {}
+    if gh.get("available") and gh.get("hits"):
+        names = "、".join(f'{_esc(h.get("name", ""))}' for h in gh["hits"][:5])
+        parts.append(f'<div style="padding:10px;background:var(--surface2);border-left:3px solid {C["warn"]};'
+                     f'border-radius:6px;font-size:13px">🌏 重仓含港/美股（{names}），'
+                     f'建议用 global-stock-data 核验对应标的后写入 agent_analysis.json。</div>')
+
+    body = "".join(parts) if parts else '<div class="sub">资金面数据为空（交易日收盘后数据才完整）。</div>'
+    return (f'<div class="card">'
+            f'<div class="section-title">💧 资金面验证（a-stock-data · {_esc(cf.get("as_of", ""))}）</div>'
+            f'{body}'
+            '<div class="sub" style="margin-top:6px">数据源：a-stock-data skill（东财 push2delay 降级）。'
+            '板块资金流=主力（超大+大单）口径；非投资建议。</div></div>')
+
+
+def _vibe_backtest_block(vb: dict | None) -> str:
+    """Vibe-Trading 独立引擎回测验证卡片。"""
+    if not vb or not vb.get("available"):
+        return ""
+    metrics = vb.get("metrics") or {}
+    if not metrics:
+        return ('<div class="card"><div class="section-title">🧪 回测验证（Vibe-Trading）</div>'
+                '<div class="sub" style="padding:10px">回测已运行但指标缺失。</div></div>')
+    wr = metrics.get("win_rate") or 0
+    tone_key = "bad" if wr < 0.4 else ("good" if wr >= 0.55 else None)
+    verdict = "偏低" if tone_key == "bad" else ("较好" if tone_key == "good" else "尚可")
+    arts = vb.get("artifacts") or {}
+    art_txt = ""
+    if arts.get("run_card_md"):
+        art_txt = (f'<div class="sub" style="margin-top:8px">完整回测卡：'
+                   f'<span style="color:var(--accent)">{_esc(str(arts["run_card_md"]))}</span></div>')
+    return (
+        '<div class="card">'
+        '<div class="section-title">🧪 回测验证（Vibe-Trading MCP · 独立日线引擎）</div>'
+        '<div class="kpi-row">'
+        f'{_kpi_tile("累计收益", _pct(metrics.get("total_return")), "", tone_key)}'
+        f'{_kpi_tile("年化", _pct(metrics.get("annual_return")), "", tone_key)}'
+        f'{_kpi_tile("最大回撤", _pct(metrics.get("max_drawdown")).replace("+", ""), "", "bad" if (metrics.get("max_drawdown") or 0) < -0.2 else None)}'
+        f'{_kpi_tile("胜率", _pct(wr).replace("+", ""), verdict, tone_key)}'
+        f'{_kpi_tile("交易笔数", metrics.get("trade_count"), "", None)}'
+        '</div>'
+        '<div class="kpi-row" style="margin-top:8px">'
+        + (f'{_kpi_tile("夏普", f"{metrics.get(chr(115) + chr(104) + chr(97) + chr(114) + chr(112) + chr(101), 0):.2f}", "", None)}' if metrics.get("sharpe") is not None else "")
+        + (f'{_kpi_tile("盈亏比", f"{metrics.get("profit_loss_ratio", 0):.2f}", "", None)}' if metrics.get("profit_loss_ratio") is not None else "")
+        + (f'{_kpi_tile("基准同期", _pct(metrics.get("benchmark_return")), "", None)}' if metrics.get("benchmark_return") is not None else "")
+        + (f'{_kpi_tile("超额", _pct(metrics.get("excess_return")), "", None)}' if metrics.get("excess_return") is not None else "")
+        + '</div>'
+        '<div style="margin-top:10px;padding:10px;background:var(--surface2);border-left:3px solid '
+        f'{C["warn"]};border-radius:6px;font-size:13px">'
+        '⚠️ 口径说明：这是 Vibe-Trading <b>日线版</b>独立引擎按同一右侧纪律'
+        '（MA20/60 结构 + 移动止盈/止损位）自动生成的交叉验证，与上方周线主回测的<b>口径、交易频率不同</b>，'
+        '不能直接对比数值，只用于确认"右侧纪律在该基金上长期是否为正期望"。'
+        '</div>'
+        f'{art_txt}</div>')
+
+
 
 def _sector_block(sector: dict | None) -> str:
     """板块共振信号灯详情块。sector 来自 sector_resonance.compute_resonance。"""
@@ -699,12 +887,16 @@ def render_html(decision: dict, metrics: dict, signals: dict, nav: pd.DataFrame,
 
   {_backtest_block(decision.get("backtest"))}
 
+  {_vibe_backtest_block(decision.get("vibe_backtest"))}
+
   {_valuation_block(decision.get("valuation"))}
 
   <div class="card">
     <div class="section-title">🟢🟡🔴 板块共振信号</div>
     {_sector_block(sector)}
   </div>
+
+  {_capital_flow_block(sector)}
 
   {_sector_news_block(decision.get("sector_news"))}
 
@@ -720,7 +912,7 @@ def render_html(decision: dict, metrics: dict, signals: dict, nav: pd.DataFrame,
 
   <div class="disclaimer">
     ⚠️ 本报告为右侧交易策略框架的机械信号输出，<b>非投资建议</b>。场外基金 T+1、净值滞后，信号仅供决策参考，盈亏自负。<br>
-    fund-deep-analysis v0.5.1 · 数据源 akshare/天天基金 · {metrics['latest_date']} 生成
+    fund-deep-analysis v0.6 · 数据源 akshare/天天基金 + a-stock-data/Vibe-Trading · {metrics['latest_date']} 生成
   </div>
 
 </div>

@@ -4,7 +4,7 @@
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Python 3.9+](https://img.shields.io/badge/Python-3.9+-blue.svg)
-![Version](https://img.shields.io/badge/version-v0.5-blueviolet)
+![Version](https://img.shields.io/badge/version-v0.6-blueviolet)
 
 ## 这是什么
 
@@ -28,6 +28,9 @@
 | 🔬 历史回测 | 右侧信号历史胜率/收益，**与卡面三档退出对齐 + 含手续费 + 买入持有基准对比 + 最大回撤对比**（防盲信未验证信号） |
 | 💰 估值锚 | 宽基 PE 历史分位（防技术面高位接盘；行业基金数据源受限降级） |
 | 🧩 组合体检 | 多基金相关性 + 行业暴露重叠（防单只都对、组合集中爆雷） |
+| 💧 资金面验证 | 可选 `--enrich-flow`：接入 **a-stock-data** skill 自动提取板块/个股资金流 + 龙虎榜 + 北向（东财 push2 被风控自动降级 push2delay），报告展示"主力净流入/流出 + 超大/大/中/小单"游资视角 |
+| 🧪 回测验证 | 可选 `--vibe-backtest`：接入 **Vibe-Trading MCP** 独立日线引擎，对右侧纪律做交叉验证（胜率/回撤/夏普/超额），与周线主回测口径区分标注 |
+| 🌏 港美股穿透 | 重仓含港/美股时提示用 **global-stock-data** 核验对应标的后再写定性研判 |
 
 ## 效果示例（159852 软件ETF嘉实 · 2026-08-05 · v0.5 空仓视角）
 
@@ -65,6 +68,27 @@ cd fund-deep-analysis/scripts
 pip install -r requirements.txt        # Windows 用 py -m pip
 ```
 
+**（可选）外部工具链**（本 skill 检测到才启用，缺失时按原流程工作）：
+
+```bash
+# 1) a-stock-data / global-stock-data（两个免费 A股/港股美股数据 skill）
+git clone https://github.com/simonlin1212/a-stock-data.git
+#   把 SKILL.md 放到 ~/.codex/skills/a-stock-data/SKILL.md
+pip install mootdx requests pandas stockstats tdxpy   # a-stock-data 依赖（httpx 保持 >=0.27 即可）
+
+git clone https://github.com/simonlin1212/global-stock-data.git
+#   把 SKILL.md 放到 ~/.codex/skills/global-stock-data/SKILL.md
+
+# 2) Vibe-Trading MCP（独立回测引擎，专用 venv 隔离）
+py -m venv ~/.codex/mcp/vibe-trading/venv
+~/.codex/mcp/vibe-trading/venv/Scripts/pip install vibe-trading-ai
+#   在 ~/.codex/config.toml 注册：
+#   [mcp_servers.vibe-trading]
+#   command = 'C:\Users\<你>\.codex\mcp\vibe-trading\venv\Scripts\vibe-trading-mcp.exe'
+#   [mcp_servers.vibe-trading.env]
+#   VIBE_TRADING_ALLOWED_RUN_ROOTS = 'C:\Users\<你>\Documents'
+```
+
 ### 2. 用法
 
 **自然语言**（在 Codex 中新开会话，skill 自动触发）
@@ -81,6 +105,8 @@ py run.py 161725 --quick         # 快速出作战卡 + HTML（自动打开）
 py run.py 161725                 # 深度：--stage1 → agent 介入 → --stage2
 py run.py 159852 --state holding --entry 0.68 --peak 0.78 --quick
                                  # 持仓视角：移动止盈从入场后峰值动态跟踪
+py run.py 159852 --stage1 --enrich-flow --vibe-backtest
+                                 # v0.6：资金面验证(a-stock-data) + 独立回测(Vibe-Trading)
 py lib/portfolio.py 161725 005827 110023   # 组合体检（多基金相关性 + 集中度）
 ```
 
@@ -122,7 +148,7 @@ fund-deep-analysis/
 ├── SKILL.md                  # 入口（Codex skill 规范）
 ├── agents/openai.yaml        # Codex skill 接口定义
 ├── scripts/
-│   ├── run.py                # 两段式入口（--quick / --stage1 / --stage2）
+│   ├── run.py                # 两段式入口（--quick / --stage1 / --stage2 / --enrich-flow / --vibe-backtest）
 │   ├── requirements.txt
 │   └── lib/                  # 核心模块
 │       ├── data_fetcher.py        # akshare 封装（自动识别场内 ETF / 场外基金）
@@ -131,7 +157,8 @@ fund-deep-analysis/
 │       ├── right_side_engine.py   # ★ 右侧决策引擎（灵魂）
 │       ├── sector_exposure.py     # 板块识别（行业/宽基/均衡）
 │       ├── sector_resonance.py    # 板块共振信号灯
-│       ├── report_render.py       # Bloomberg HTML 报告
+│       ├── toolchain.py           # v0.6 ★ 外部工具链桥接（a-stock-data 提取 / Vibe-Trading run_dir + MCP 调用 / global-stock-data 提示）
+│       ├── report_render.py       # Bloomberg HTML 报告（含资金面验证 + 回测验证卡片）
 │       ├── backtest.py            # 历史回测（信号胜率）
 │       ├── valuation.py           # 估值锚（PE 分位）
 │       └── portfolio.py           # 组合体检（相关性 / 集中度）

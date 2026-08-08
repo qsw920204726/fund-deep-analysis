@@ -167,3 +167,54 @@
 ## reports/{code}_{date}/battle-card.md（stage2 写）
 
 最终产物，markdown 作战卡。Phase 3 升级为 Bloomberg 风格 HTML。
+
+
+## v0.6 外部工具链字段（可选增强，缺失不影响主流程）
+
+### sector.json.capital_flow（--enrich-flow 时脚本写，a-stock-data）
+
+```json
+{
+  "available": true,
+  "source": "a-stock-data",
+  "as_of": "2026-08-08",
+  "sector_board": {
+    "board_type": "industry",
+    "board": {"name": "软件开发", "code": "BK0737", "change_pct": -1.16,
+              "main_net": -3866552832, "main_pct": -5.8, "rank": 495},
+    "today_flow": {"date": "2026-08-07", "main_net": -3866552832,
+                   "small_net": 3165765376, "medium_net": 686243328,
+                   "large_net": -1547491584, "super_large_net": -2319061248}
+  },
+  "board_flow": {"industry": {"today": {"total": 496, "matched": [], "top5": [...]}, "5d": {...}},
+                 "concept": {...}},
+  "holdings": [{"name": "科大讯飞", "code": "002230", "weight": 11.19}],
+  "stock_flow": [{"name": "科大讯飞", "code": "002230", "weight": 11.19,
+                  "latest": {"date": "2026-08-07", "main_net": 1234567, "main_pct": 3.2}}],
+  "dragon_tiger": {"total": 0, "matched": [], "holdings": []},
+  "northbound": {"rows": [...], "latest": {"time": "15:00", "hgt_yi": -9.28, "sgt_yi": null}},
+  "global_stock_hint": {"available": false, "hits": []}
+}
+```
+- 所有金额单位=元（报告层转亿展示）；`matched` 为空表示板块资金未进流入榜（本身就是弱势信号）。
+- 任一子项失败写 `{"error": "..."}` 并继续；东财 push2 被风控时自动降级 push2delay。
+- `global_stock_hint.available=true` 时，agent 必须用 global-stock-data 核验对应港/美股后写入 agent_analysis.json。
+
+### rightside.json.vibe_backtest（--vibe-backtest 时脚本写，Vibe-Trading MCP）
+
+```json
+{
+  "available": true,
+  "source": "Vibe-Trading MCP",
+  "status": "ok",
+  "metrics": {
+    "total_return": -0.2717, "annual_return": -0.0584, "max_drawdown": -0.3715,
+    "sharpe": -0.384, "win_rate": 0.3939, "trade_count": 33,
+    "benchmark_return": -0.2523, "excess_return": -0.0194
+  },
+  "artifacts": {"run_card_md": "...", "equity": "...", "trades": "..."},
+  "run_dir": "..."
+}
+```
+- `metrics` 为比率（-0.2717 = -27.17%），报告层 ×100 展示；与周线主回测口径不同，仅作独立交叉验证。
+- 失败时 `available=false` + `error`，报告区显示"未接入/降级"，不阻断出报告。

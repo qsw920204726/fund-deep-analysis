@@ -354,6 +354,35 @@ def _backtest_md(bt: dict | None) -> list[str]:
     ]
 
 
+def _vibe_backtest_md(vb: dict | None) -> list[str]:
+    """Vibe-Trading 独立引擎回测验证（markdown）。"""
+    if not vb or not vb.get("available"):
+        return []
+    m = vb.get("metrics") or {}
+    if not m:
+        return ["", "## 🧪 回测验证（Vibe-Trading）：已运行但指标缺失", ""]
+    def _pct(v):
+        try:
+            f = float(v)
+        except (TypeError, ValueError):
+            return "—"
+        if abs(f) <= 1:
+            f *= 100
+        return f"{f:+.1f}%"
+    return [
+        "",
+        "## 🧪 回测验证（Vibe-Trading MCP · 独立日线引擎）",
+        "",
+        f"- 累计收益 {_pct(m.get('total_return'))} · 年化 {_pct(m.get('annual_return'))} · "
+        f"最大回撤 {_pct(m.get('max_drawdown'))} · 胜率 {_pct(m.get('win_rate'))} · "
+        f"{m.get('trade_count')} 笔 · 夏普 {m.get('sharpe', 0):.2f}",
+        f"- 基准同期 {_pct(m.get('benchmark_return'))} · 超额 {_pct(m.get('excess_return'))} · "
+        f"盈亏比 {m.get('profit_loss_ratio', 0):.2f}",
+        "- ⚠️ 日线口径独立交叉验证，与上方周线主回测不可直接对比，仅确认右侧纪律长期期望。",
+        "",
+    ]
+
+
 def _valuation_md(val: dict | None) -> list[str]:
     """估值锚 markdown 行（PE 历史分位）。"""
     if not val or not val.get("available"):
@@ -433,6 +462,7 @@ def render_battle_card(decision: dict, metrics: dict, signals: dict, fund_code: 
         f"3年 {_p(metrics.get('period_returns_pct',{}).get('3y'))}%",
         f"- 距阶段高点(52周): **{_p(lv.get('pct_below_stage_high'))}%**",
         *_backtest_md(decision.get("backtest")),
+        *_vibe_backtest_md(decision.get("vibe_backtest")),
         *_valuation_md(decision.get("valuation")),
         f"## 🟢🟡🔴 板块信号：{decision['sector_signal']}",
         *_sector_news_md(decision.get("sector_news")),

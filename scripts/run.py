@@ -10,6 +10,11 @@
                                     [agent_analysis.json]  ← agent 介入写入
                                                     ↓
                           reports/{code}_{date}/battle-card.md + report.html
+
+外部工具链（可选增强，v0.6）：
+  --enrich-flow    用 a-stock-data 补齐板块/个股资金流 + 龙虎榜 + 北向 → sector.json.capital_flow
+  --vibe-backtest  导出右侧信号 run_dir 并调用 Vibe-Trading MCP 独立回测 → rightside.json.vibe_backtest
+  任一环节失败自动降级，不阻断主流程。
 """
 from __future__ import annotations
 
@@ -100,8 +105,8 @@ def progress(pct: int, msg: str) -> None:
 
 # ---------------------------- 板块采集（降级友好） ----------------------------
 
-def _collect_sector(code: str, signals: dict) -> dict:
-    """板块识别 + 共振信号灯。任何环节失败都降级，不阻断主流程。"""
+def _collect_sector(code: str, signals: dict, enrich_flow: bool = False) -> dict:
+    """板块识别 + 共振信号灯（可选资金面增强）。任何环节失败都降级，不阻断主流程。"""
     cache = cache_dir(code)
     try:
         name, ftype = fetch_fund_name(code)
@@ -128,6 +133,21 @@ def _collect_sector(code: str, signals: dict) -> dict:
         sector["fund_type"] = ftype
         sector["holdings_year"] = hy
         sector["industry_snapshot"] = snap
+        if enrich_flow:
+            try:
+                from toolchain import enrich_capital_flow, global_stock_hint
+                cf = enrich_capital_flow(code, sector_id, holdings, name)
+                if not cf.get("available") and cf.get("error"):
+                    print(f"  ⚠️ 资金面增强跳过：{cf['error']}")
+                else:
+                    sector["capital_flow"] = cf
+                    print("  ✅ 资金面增强（a-stock-data）：板块/个股资金流 + 龙虎榜 + 北向 已并入")
+                gh = global_stock_hint(holdings)
+                if gh.get("available"):
+                    sector["global_stock_hint"] = gh
+                    print(f"  🌏 重仓含港股/美股（{len(gh['hits'])} 只），建议 agent 用 global-stock-data 穿透核验")
+            except Exception as e2:
+                print(f"  ⚠️ 资金面增强异常（降级）：{e2!r}")
     except Exception as e:
         sector = {"available": False, "light": "⚪", "label": f"板块分析失败: {e}",
                   "advice": "", "fund_code": code}
@@ -137,7 +157,8 @@ def _collect_sector(code: str, signals: dict) -> dict:
 
 # ---------------------------- Stage 1 ----------------------------
 
-def stage1(code: str, state: dict | None = None) -> dict:
+def stage1(code: str, state: dict | None = None, *,
+           enrich_flow: bool = False, vibe_backtest: bool = False) -> dict:
     cache = cache_dir(code)
 
     progress(8, f"采集 {code} 历史净值（天天基金）…")
@@ -160,7 +181,7 @@ def stage1(code: str, state: dict | None = None) -> dict:
     save_json(cache / "signals.json", signals)
 
     progress(70, "板块识别 + 共振信号灯…")
-    sector = _collect_sector(code, signals)
+    sector = _collect_sector(code, signals, enrich_flow=enrich_flow)
 
     progress(82, "生成右侧骨架决策（建仓/加仓/止盈/止损）…")
     decision = decide(metrics, signals, sector, state=state)
@@ -171,6 +192,21 @@ def stage1(code: str, state: dict | None = None) -> dict:
 
     progress(96, "估值锚（PE 历史分位）…")
     decision["valuation"] = compute_valuation(sector.get("sector_id", {}).get("main_sector"))
+
+    if vibe_backtest:
+        progress(98, "导出右侧信号 → Vibe-Trading MCP 独立回测…")
+        try:
+            from toolchain import export_vibe_run, run_vibe_backtest
+            run_dir = export_vibe_run(code, sector.get("fund_name", ""), decision, nav, RUNTIME_DIR)
+            decision["vibe_backtest"] = run_vibe_backtest(run_dir)
+            if decision["vibe_backtest"].get("available"):
+                print("  ✅ Vibe-Trading 回测完成，结果并入 rightside.json.vibe_backtest")
+            else:
+                print(f"  ⚠️ Vibe-Trading 回测不可用：{decision['vibe_backtest'].get('error')}")
+        except Exception as e:
+            decision["vibe_backtest"] = {"available": False, "error": f"{e!r}"}
+            print(f"  ⚠️ Vibe-Trading 回测导出失败（降级）：{e!r}")
+
     save_json(cache / "rightside.json", decision)
     save_json(cache / "backtest.json", bt)
 
@@ -314,6 +350,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--peak", type=float, default=None, help="入场后最高净值（--state holding 可选，默认=entry）")
     parser.add_argument("--open", dest="open_report", action="store_true", help="生成后打开 HTML 报告")
     parser.add_argument("--no-open", dest="open_report", action="store_false", help=argparse.SUPPRESS)
+    parser.add_argument("--enrich-flow", action="store_true",
+                        help="用 a-stock-data 补齐板块/个股资金流 + 龙虎榜 + 北向（需已安装 a-stock-data skill）")
+    parser.add_argument("--vibe-backtest", action="store_true",
+                        help="导出右侧信号 run_dir 并调用 Vibe-Trading MCP 独立回测（需已安装 vibe-trading-ai）")
     parser.set_defaults(open_report=False)
     return parser
 
@@ -327,7 +367,8 @@ def main(argv: list[str] | None = None) -> None:
         parser.error("--state holding 必须提供 --entry 成本净值")
 
     if args.stage1:
-        stage1(args.code, state=state)
+        stage1(args.code, state=state, enrich_flow=args.enrich_flow,
+               vibe_backtest=args.vibe_backtest)
         print(f"\n⏸️  stage1 完成。Agent 介入：读 .cache/{args.code}/rightside.json + sector.json，"
               f"检索板块消息面，写 agent_analysis.json，再运行 --stage2")
         return
@@ -341,11 +382,13 @@ def main(argv: list[str] | None = None) -> None:
         return
 
     if not args.quick:
-        stage1(args.code, state=state)
+        stage1(args.code, state=state, enrich_flow=args.enrich_flow,
+               vibe_backtest=args.vibe_backtest)
         print(f"\n⏸️  stage1 完成。深度模式：写 agent_analysis.json 后使用同一 Python 运行 `run.py {args.code} --stage2`。\n")
         return
 
-    s1 = stage1(args.code, state=state)
+    s1 = stage1(args.code, state=state, enrich_flow=args.enrich_flow,
+                vibe_backtest=args.vibe_backtest)
     md_out, html_out = stage2(args.code, s1, require_agent=False)
     print(f"\n✅ 作战卡：{md_out}\n✅ HTML 报告：{html_out}")
     if args.open_report:

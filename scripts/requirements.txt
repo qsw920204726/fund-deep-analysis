@@ -2,3 +2,6 @@
 # 用 py 启动器安装：py -m pip install -r requirements.txt
 akshare>=1.14.0
 pandas>=2.0.0
+numpy>=1.24.0
+# v0.6 外部工具链：--vibe-backtest 导出本地数据桥配置需要（缺失时降级为最小 YAML 写入）
+pyyaml>=6.0
